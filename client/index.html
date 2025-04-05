@@ -15,29 +15,31 @@
 <body class="font-[Montserrat] bg-white">
     <!-- Header -->
     <header class="relative text-white min-h-[80vh] hero">
-        <nav
-            class="container mx-auto px-6 py-6 flex justify-between items-center backdrop-blur-sm bg-[#194A53]/90 fixed top-0 left-0 right-0 z-50">
-            <div class="flex items-center space-x-4">
-                <img src="https://images.squarespace-cdn.com/content/v1/6421f90cd6a614318dc936f1/5ca0415e-66be-4002-b6f9-b88651166ff9/WA-Shield%2BWordmark-Horizontal.png?format=1500w"
-                    alt="Wasatch Academy Logo" class="h-12 hover:opacity-90 transition-opacity">
-            </div>
-            <div class="hidden md:flex space-x-8">
-                <a href="#about" class="nav-link text-lg font-medium">About</a>
-                <a href="#program" class="nav-link text-lg font-medium">Dual Diploma Program</a>
-                <a href="#partners" class="nav-link text-lg font-medium">Partners</a>
-            </div>
-            <!-- Mobile menu button -->
-            <button class="md:hidden text-white focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-        </nav>
+        <div class="nav-container">
+            <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <img src="https://images.squarespace-cdn.com/content/v1/6421f90cd6a614318dc936f1/5ca0415e-66be-4002-b6f9-b88651166ff9/WA-Shield%2BWordmark-Horizontal.png?format=1500w"
+                        alt="Wasatch Academy Logo" class="h-12 hover:opacity-90 transition-opacity">
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#about" class="nav-link text-lg">About</a>
+                    <a href="#program" class="nav-link text-lg">Dual Diploma Program</a>
+                    <a href="#partners" class="nav-link text-lg">Partners</a>
+                </div>
+                <!-- Mobile menu button -->
+                <button class="md:hidden focus:outline-none text-[#194A53]">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </nav>
+        </div>
 
         <div
-            class="container mx-auto px-6 hero-content flex flex-col justify-center items-center min-h-[80vh] text-center">
-            <h1 class="text-5xl md:text-7xl font-bold mb-8 animate-fade-in">Global Partnerships</h1>
-            <p class="text-xl md:text-2xl max-w-3xl mx-auto mb-12 opacity-90 animate-fade-in"
+            class="container mx-auto px-6 hero-content flex flex-col justify-center items-center min-h-[60vh] text-center pt-24 pb-16">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 animate-fade-in hero-text">Global Partnerships</h1>
+            <p class="text-lg md:text-xl max-w-3xl mx-auto mb-8 opacity-95 animate-fade-in hero-text"
                 style="animation-delay: 0.2s">
                 Connecting Educational Excellence Worldwide through the Wasatch Academy Dual Diploma Program
             </p>
@@ -140,7 +142,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
                 <div>
                     <img src="https://images.squarespace-cdn.com/content/v1/6421f90cd6a614318dc936f1/5ca0415e-66be-4002-b6f9-b88651166ff9/WA-Shield%2BWordmark-Horizontal.png?format=1500w"
-                        alt="Wasatch Academy Logo" class="h-12 mb-6">
+                        alt="Wasatch Academy Logo" class="h-12 mb-6 footer-logo">
                     <p class="text-gray-300">Empowering global education through innovative partnerships and academic
                         excellence.</p>
                 </div>
@@ -174,7 +176,7 @@
                 </div>
             </div>
             <div class="border-t border-gray-700 mt-12 pt-8 text-center text-gray-300">
-                <p>&copy; 2024 Wasatch Academy Global Initiatives. All rights reserved.</p>
+                <p>&copy; <span id="current-year"></span> Wasatch Academy. All rights reserved.</p>
             </div>
         </div>
     </footer>

@@ -1,8 +1,10 @@
-// Load partners data and populate the grid
+// Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
     await loadPartners();
     setupScrollAnimations();
     setupMobileMenu();
+    setupNavigation();
+    setupFooterYear();
     
     // Add click handler for Learn More button
     document.querySelector('a[href="#program"]')?.addEventListener('click', (e) => {
@@ -11,6 +13,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         programSection?.scrollIntoView({ behavior: 'smooth' });
     });
 });
+
+// Set current year in footer
+function setupFooterYear() {
+    const yearSpan = document.getElementById('current-year');
+    if (yearSpan) {
+        yearSpan.textContent = new Date().getFullYear();
+    }
+}
+
+// Handle fixed navigation
+function setupNavigation() {
+    const nav = document.querySelector('.nav-container');
+    let lastScroll = 0;
+    
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.scrollY;
+        
+        // Add/remove scrolled class for styling
+        if (currentScroll > 50) {
+            nav.classList.add('scrolled');
+        } else {
+            nav.classList.remove('scrolled');
+        }
+        
+        // Hide/show nav based on scroll direction
+        if (currentScroll > lastScroll && currentScroll > 500) {
+            nav.style.transform = 'translateY(-100%)';
+        } else {
+            nav.style.transform = 'translateY(0)';
+        }
+        
+        lastScroll = currentScroll;
+    });
+}
 
 async function loadPartners() {
     try {
@@ -40,15 +76,15 @@ async function loadPartners() {
                     <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                 </div>
                 <div class="p-8">
-                    <h3 class="text-2xl font-semibold text-[#194A53] mb-3">${partner.name}</h3>
-                    <div class="flex items-center mb-4 text-gray-600">
+                    <h3 class="partner-title">${partner.name}</h3>
+                    <div class="flex items-center mb-4">
                         <svg class="w-5 h-5 mr-2 text-[#F76B1C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                   d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
-                        <span class="font-medium">${partner.location}</span>
+                        <span class="partner-location">${partner.location}</span>
                     </div>
                     <p class="text-gray-700 line-clamp-3 mb-6">${partner.bio}</p>
                     <div class="flex items-center text-[#F76B1C] font-medium group">
@@ -173,8 +209,9 @@ function setupMobileMenu() {
             nav.classList.toggle('top-full');
             nav.classList.toggle('left-0');
             nav.classList.toggle('right-0');
-            nav.classList.toggle('bg-[#194A53]');
+            nav.classList.toggle('bg-white');
             nav.classList.toggle('p-4');
+            nav.classList.toggle('shadow-lg');
         });
     }
 }
@@ -203,6 +240,11 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 behavior: 'smooth',
                 block: 'start'
             });
+            // Close mobile menu if open
+            const nav = document.querySelector('.hidden.md\\:flex');
+            if (nav && !nav.classList.contains('hidden')) {
+                nav.classList.add('hidden');
+            }
         }
     });
 });
