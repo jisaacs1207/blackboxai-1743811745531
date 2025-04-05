@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "1743882458506",
+    "name": "test",
+    "location": "test",
+    "image": "",
+    "bio": "ttt",
+    "website": "https://google.com",
+    "contact": {
+      "email": "test@google.com",
+      "phone": "tt"
+    },
+    "partnershipDetails": "ttt"
+  }
+]

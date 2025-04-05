@@ -20,8 +20,18 @@ const ADMIN_CREDENTIALS = {
 };
 
 app.use(express.json());
-app.use(express.static('client'));
-app.use(express.static(path.join(__dirname, 'views')));
+app.use(express.static(path.join(__dirname, '..', 'client')));
+app.use('/admin', express.static(path.join(__dirname, 'views')));
+
+// Set proper MIME types
+app.use((req, res, next) => {
+    if (req.url.endsWith('.css')) {
+        res.type('text/css');
+    } else if (req.url.endsWith('.js')) {
+        res.type('application/javascript');
+    }
+    next();
+});
 
 // Session middleware
 app.use(session({
@@ -62,8 +72,28 @@ async function saveCustomization() {
     }
 }
 
-// Initialize customization
-loadCustomization();
+// Initialize data and start server
+async function initializeServer() {
+    try {
+        // Load customization
+        const customData = await fs.readFile(path.join(__dirname, 'data', 'customization.json'), 'utf8');
+        siteCustomization = JSON.parse(customData);
+        console.log('Loaded customization:', siteCustomization);
+    } catch (error) {
+        console.log('Using default customization');
+    }
+}
+
+// Initialize data and start server
+initializeServer().then(() => {
+    const PORT = process.env.PORT || 8000;
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}).catch(error => {
+    console.error('Failed to initialize server:', error);
+    process.exit(1);
+});
 
 // Serve index.html at root
 app.get('/', (req, res) => {
@@ -93,10 +123,23 @@ app.get('/api/customization', (req, res) => {
 
 app.post('/api/customization', requireAuth, async (req, res) => {
     try {
+        // Update customization
         siteCustomization = { ...siteCustomization, ...req.body };
-        await saveCustomization();
-        res.json({ success: true, message: 'Customization saved successfully' });
+        
+        // Save to file
+        await fs.writeFile(
+            path.join(__dirname, 'data', 'customization.json'),
+            JSON.stringify(siteCustomization, null, 2)
+        );
+
+        // Send updated customization back
+        res.json({ 
+            success: true, 
+            message: 'Customization saved successfully',
+            customization: siteCustomization
+        });
     } catch (error) {
+        console.error('Error saving customization:', error);
         res.status(500).json({ success: false, message: 'Error saving customization' });
     }
 });
@@ -175,8 +218,3 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'admin.html'));
 });
 
-// Start server
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});

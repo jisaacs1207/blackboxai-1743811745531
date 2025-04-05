@@ -177,6 +177,14 @@ function showPreview() {
             --font-color: ${siteCustomization.fontColor};
             --accent-color: ${siteCustomization.accentColor};
         }
+        
+        /* Apply preview styles directly to elements */
+        body { background-color: var(--bg-color); }
+        header { background-color: var(--header-color); }
+        .text-[#333333] { color: var(--font-color); }
+        .hover\\:bg-\\[\\#F76B1C\\]:hover { background-color: var(--accent-color); }
+        .bg-\\[\\#F76B1C\\] { background-color: var(--accent-color); }
+        .bg-\\[\\#194A53\\] { background-color: var(--header-color); }
     `;
 
     // Remove existing preview if any
@@ -201,6 +209,8 @@ async function applyCustomization() {
         const data = await response.json();
         if (data.success) {
             showToast('Customization applied successfully!', 'success');
+            // Reload the page to apply new styles
+            window.location.reload();
         } else {
             showToast('Error applying customization', 'error');
         }
@@ -254,3 +264,138 @@ function showToast(message, type = 'success') {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
+
+// Partner Management functionality
+function setupPartnerManagement() {
+    const partnerForm = document.getElementById('partner-form');
+    if (partnerForm) {
+        partnerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(partnerForm);
+            const partnerData = {};
+            formData.forEach((value, key) => {
+                if (key.includes('.')) {
+                    const [parent, child] = key.split('.');
+                    if (!partnerData[parent]) partnerData[parent] = {};
+                    partnerData[parent][child] = value;
+                } else {
+                    partnerData[key] = value;
+                }
+            });
+
+            try {
+                const response = await fetch('/api/partners', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(partnerData)
+                });
+
+                if (response.ok) {
+                    showToast('Partner added successfully!', 'success');
+                    closeModal();
+                    partnerForm.reset();
+                    loadPartners(); // Reload the partners list
+                } else {
+                    showToast('Error adding partner', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving partner:', error);
+                showToast('Error adding partner', 'error');
+            }
+        });
+    }
+
+    const addPartnerBtn = document.getElementById('add-partner-btn');
+    if (addPartnerBtn) {
+        addPartnerBtn.addEventListener('click', () => {
+            const modal = document.getElementById('partner-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        });
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('partner-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        const form = document.getElementById('partner-form');
+        if (form) form.reset();
+    }
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Function to load partners
+async function loadPartners() {
+    try {
+        const response = await fetch('/api/partners');
+        const partners = await response.json();
+        const partnersTable = document.getElementById('partners-table');
+        if (partnersTable) {
+            // Create table headers
+            partnersTable.innerHTML = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${partners.map(partner => `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">${partner.name || ''}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${partner.location || ''}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${partner.contact?.email || ''}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <button onclick="editPartner('${partner.id}')" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
+                                    <button onclick="deletePartner('${partner.id}')" class="text-red-600 hover:text-red-900">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading partners:', error);
+        showToast('Error loading partners', 'error');
+    }
+}
+
+// Initialize everything when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuthStatus();
+    setupLoginForm();
+    setupLogoutButton();
+    setupPartnerManagement();
+
+    // Setup observer for dashboard visibility
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.target.id === 'dashboard-section' && 
+                !mutation.target.classList.contains('hidden')) {
+                loadPartners();
+            }
+        });
+    });
+
+    const dashboard = document.getElementById('dashboard-section');
+    if (dashboard) {
+        observer.observe(dashboard, { 
+            attributes: true, 
+            attributeFilter: ['class'] 
+        });
+    }
+});
