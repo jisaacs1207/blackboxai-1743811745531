@@ -1,172 +1,187 @@
-// Load site customization and partners on page load
-document.addEventListener('DOMContentLoaded', () => {
-    fetch('/api/customization')
-        .then(response => response.json())
-        .then(customization => {
-            applyCustomization(customization);
-        })
-        .catch(error => {
-            console.error('Error loading customization:', error);
-        });
-
-    loadPartners();
+// Load partners data and populate the grid
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadPartners();
+    setupScrollAnimations();
+    setupMobileMenu();
+    
+    // Add click handler for Learn More button
+    document.querySelector('a[href="#program"]')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const programSection = document.querySelector('#program');
+        programSection?.scrollIntoView({ behavior: 'smooth' });
+    });
 });
 
-// Apply customization to the site
-function applyCustomization(customization) {
-    // Update banner image if provided
-    if (customization.bannerUrl) {
-        const bannerImg = document.querySelector('header img');
-        if (bannerImg) {
-            bannerImg.src = customization.bannerUrl;
-        }
-    }
-
-    // Create or update style element
-    let styleEl = document.getElementById('custom-styles');
-    if (!styleEl) {
-        styleEl = document.createElement('style');
-        styleEl.id = 'custom-styles';
-        document.head.appendChild(styleEl);
-    }
-
-    // Apply all styles at once
-    styleEl.textContent = `
-        header, .bg-\\[\\#194A53\\] { background-color: ${customization.headerColor} !important; }
-        .bg-\\[\\#F76B1C\\] { background-color: ${customization.accentColor} !important; }
-        .text-\\[\\#333333\\] { color: ${customization.fontColor} !important; }
-        .text-\\[\\#F76B1C\\] { color: ${customization.accentColor} !important; }
-        .hover\\:text-\\[\\#F76B1C\\]:hover { color: ${customization.accentColor} !important; }
-        .hover\\:bg-\\[\\#F76B1C\\]:hover { background-color: ${customization.accentColor} !important; }
-        button.bg-\\[\\#194A53\\] { background-color: ${customization.headerColor} !important; }
-        button.hover\\:bg-\\[\\#F76B1C\\]:hover { background-color: ${customization.accentColor} !important; }
-    `;
-
-    // Force a repaint
-    document.body.style.display = 'none';
-    document.body.offsetHeight;
-    document.body.style.display = '';
-}
-
-// Partner card functionality
-let partners = [];
-
-// Load partners on page load
-document.addEventListener('DOMContentLoaded', () => {
-    loadPartners();
-});
-
-// Function to load partners
 async function loadPartners() {
     try {
-        const response = await fetch('/api/partners');
-        partners = await response.json();
-        displayPartners();
-    } catch (error) {
-        console.error('Error loading partners:', error);
-    }
-}
-
-// Function to display partners
-function displayPartners() {
-    const grid = document.getElementById('partners-grid');
-    if (!grid) return;
-
-    if (!partners || partners.length === 0) {
-        grid.innerHTML = '<p class="col-span-full text-center text-gray-500">No partners available.</p>';
-        return;
-    }
-
-    grid.innerHTML = partners.map(partner => `
-        <div class="partner-card bg-white rounded-lg shadow-lg overflow-hidden">
-            <img src="${partner.image || 'https://via.placeholder.com/300x200'}" 
-                 alt="${partner.name}" 
-                 class="w-full h-48 object-cover"
-                 onerror="this.src='https://via.placeholder.com/300x200'">
-            <div class="p-6">
-                <h3 class="text-xl font-bold mb-2 text-[#333333]">${partner.name}</h3>
-                <p class="text-gray-600 mb-4">${partner.location}</p>
-                <button onclick="showPartnerDetails('${partner.id}')"
-                        class="bg-[#194A53] text-white px-4 py-2 rounded-md hover:bg-[#F76B1C] transition">
-                    Learn More
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Function to load partners
-async function loadPartners() {
-    try {
+        console.log('Fetching partners...');
         const response = await fetch('/api/partners');
         if (!response.ok) {
-            throw new Error('Failed to load partners');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        partners = await response.json();
-        displayPartners();
+        const partners = await response.json();
+        console.log('Loaded partners:', partners);
+        
+        const partnersGrid = document.getElementById('partners-grid');
+        if (!partnersGrid) {
+            console.error('Partners grid element not found');
+            return;
+        }
+        
+        partnersGrid.innerHTML = partners.map((partner, index) => `
+            <div class="partner-card bg-white rounded-2xl shadow-lg overflow-hidden transform hover:scale-[1.02] transition-all duration-300" 
+                 onclick="showPartnerDetails('${partner.id}')"
+                 style="opacity: 0; animation: fadeIn 0.5s ease forwards; animation-delay: ${index * 0.2}s">
+                <div class="relative overflow-hidden h-64">
+                    <img src="${partner.image || 'https://via.placeholder.com/400x300?text=No+Image'}" 
+                         alt="${partner.name}" 
+                         class="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                         onerror="this.src='https://via.placeholder.com/400x300?text=Image+Not+Found'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                </div>
+                <div class="p-8">
+                    <h3 class="text-2xl font-semibold text-[#194A53] mb-3">${partner.name}</h3>
+                    <div class="flex items-center mb-4 text-gray-600">
+                        <svg class="w-5 h-5 mr-2 text-[#F76B1C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span class="font-medium">${partner.location}</span>
+                    </div>
+                    <p class="text-gray-700 line-clamp-3 mb-6">${partner.bio}</p>
+                    <div class="flex items-center text-[#F76B1C] font-medium group">
+                        <span>Learn More</span>
+                        <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" 
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        `).join('');
     } catch (error) {
         console.error('Error loading partners:', error);
-        const grid = document.getElementById('partners-grid');
-        if (grid) {
-            grid.innerHTML = '<p class="col-span-full text-center text-red-500">Error loading partners. Please try again later.</p>';
-        }
     }
 }
 
-// Function to show partner details
 function showPartnerDetails(partnerId) {
-    const partner = partners.find(p => p.id === partnerId);
-    if (!partner) return;
+    fetch(`/api/partners/${partnerId}`)
+        .then(response => response.json())
+        .then(partner => {
+            const modal = document.getElementById('partner-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
 
-    const modal = document.getElementById('partner-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalContent = document.getElementById('modal-content');
+            modalTitle.textContent = partner.name;
+            modalContent.innerHTML = `
+                <div class="space-y-6">
+                    <img src="${partner.image}" alt="${partner.name}" class="w-full h-64 object-cover rounded-lg mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2 text-[#194A53]">Location</h4>
+                            <p class="text-[#333333]">${partner.location}</p>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2 text-[#194A53]">Contact</h4>
+                            <p class="text-[#333333]">${partner.contact?.email || 'N/A'}</p>
+                            <p class="text-[#333333]">${partner.contact?.phone || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-2 text-[#194A53]">About</h4>
+                        <p class="text-[#333333] leading-relaxed">${partner.bio}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-2 text-[#194A53]">Partnership Details</h4>
+                        <p class="text-[#333333] leading-relaxed">${partner.partnershipDetails}</p>
+                    </div>
+                    ${partner.website ? `
+                        <div class="mt-6">
+                            <a href="${partner.website}" target="_blank" 
+                               class="inline-flex items-center text-[#194A53] hover:text-[#F76B1C] transition-colors">
+                                <span>Visit Website</span>
+                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                </svg>
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
 
-    modalTitle.textContent = partner.name;
-    modalContent.innerHTML = `
-        <div class="space-y-4">
-            <img src="${partner.image || 'https://via.placeholder.com/600x400'}" 
-                 alt="${partner.name}" 
-                 class="w-full h-64 object-cover rounded-lg mb-4">
-            <div class="space-y-2">
-                <p class="text-lg"><strong>Location:</strong> ${partner.location}</p>
-                <p class="text-lg"><strong>Website:</strong> 
-                    <a href="${partner.website}" target="_blank" class="text-[var(--accent-color)] hover:underline">
-                        ${partner.website}
-                    </a>
-                </p>
-                <div class="mt-4">
-                    <h4 class="text-lg font-bold mb-2">About</h4>
-                    <p>${partner.bio || 'No description available.'}</p>
-                </div>
-                <div class="mt-4">
-                    <h4 class="text-lg font-bold mb-2">Partnership Details</h4>
-                    <p>${partner.partnershipDetails || 'No details available.'}</p>
-                </div>
-                <div class="mt-4">
-                    <h4 class="text-lg font-bold mb-2">Contact Information</h4>
-                    <p><strong>Email:</strong> ${partner.contact?.email || 'N/A'}</p>
-                    <p><strong>Phone:</strong> ${partner.contact?.phone || 'N/A'}</p>
-                </div>
-            </div>
-        </div>
-    `;
-
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Add fade-in animation
+            modalContent.style.opacity = '0';
+            modalContent.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                modalContent.style.opacity = '1';
+                modalContent.style.transform = 'scale(1)';
+            }, 10);
+        })
+        .catch(error => console.error('Error loading partner details:', error));
 }
 
-// Function to close partner details modal
 function closeModal() {
     const modal = document.getElementById('partner-modal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    const modalContent = document.getElementById('modal-content');
+    
+    // Add fade-out animation
+    modalContent.style.opacity = '0';
+    modalContent.style.transform = 'scale(0.95)';
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+}
+
+function setupScrollAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-fade-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '50px'
+    });
+
+    // Observe all sections and elements with animation classes
+    document.querySelectorAll('section, .animate-fade-in').forEach(el => {
+        observer.observe(el);
+    });
+}
+
+function setupMobileMenu() {
+    const mobileMenuBtn = document.querySelector('.md\\:hidden');
+    const nav = document.querySelector('.hidden.md\\:flex');
+    
+    if (mobileMenuBtn && nav) {
+        mobileMenuBtn.addEventListener('click', () => {
+            nav.classList.toggle('hidden');
+            nav.classList.toggle('flex');
+            nav.classList.toggle('flex-col');
+            nav.classList.toggle('absolute');
+            nav.classList.toggle('top-full');
+            nav.classList.toggle('left-0');
+            nav.classList.toggle('right-0');
+            nav.classList.toggle('bg-[#194A53]');
+            nav.classList.toggle('p-4');
+        });
+    }
 }
 
 // Close modal when clicking outside
-document.addEventListener('click', (e) => {
-    const modal = document.getElementById('partner-modal');
-    if (e.target === modal) {
+document.getElementById('partner-modal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
         closeModal();
     }
 });
@@ -176,4 +191,18 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeModal();
     }
+});
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
 });

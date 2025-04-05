@@ -359,8 +359,14 @@ async function loadPartners() {
                                 <td class="px-6 py-4 whitespace-nowrap">${partner.location || ''}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">${partner.contact?.email || ''}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <button onclick="editPartner('${partner.id}')" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-                                    <button onclick="deletePartner('${partner.id}')" class="text-red-600 hover:text-red-900">Delete</button>
+                                    <button onclick="editPartner('${partner.id}')" 
+                                            class="text-[#194A53] hover:text-[#F76B1C] transition-colors mr-4">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button onclick="deletePartner('${partner.id}')" 
+                                            class="text-red-600 hover:text-red-800 transition-colors">
+                                        <i class="fas fa-trash-alt"></i> Delete
+                                    </button>
                                 </td>
                             </tr>
                         `).join('')}
@@ -368,10 +374,164 @@ async function loadPartners() {
                 </table>
             `;
         }
+
+        // Update stats
+        const totalPartners = partners.length;
+        const activePartners = partners.filter(p => p.active !== false).length;
+        const countries = [...new Set(partners.map(p => p.location.split(',').pop().trim()))].length;
+
+        document.querySelector('.stat-value:nth-child(1)').textContent = totalPartners;
+        document.querySelector('.stat-value:nth-child(2)').textContent = activePartners;
+        document.querySelector('.stat-value:nth-child(3)').textContent = countries;
+
     } catch (error) {
         console.error('Error loading partners:', error);
         showToast('Error loading partners', 'error');
     }
+}
+
+// Edit partner
+async function editPartner(partnerId) {
+    try {
+        // Get partner data
+        const response = await fetch(`/api/partners/${partnerId}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch partner data');
+        }
+        
+        const partner = await response.json();
+        console.log('Editing partner:', partner);
+        
+        // Get form and validate
+        const form = document.getElementById('partner-form');
+        if (!form) {
+            throw new Error('Partner form not found');
+        }
+        
+        // Populate form fields
+        const fields = {
+            'name': partner.name || '',
+            'location': partner.location || '',
+            'image': partner.image || '',
+            'bio': partner.bio || '',
+            'website': partner.website || '',
+            'contact.email': partner.contact?.email || '',
+            'contact.phone': partner.contact?.phone || '',
+            'partnershipDetails': partner.partnershipDetails || ''
+        };
+        
+        // Set each field value
+        Object.entries(fields).forEach(([name, value]) => {
+            const field = form.querySelector(`[name="${name}"]`);
+            if (field) {
+                field.value = value;
+            }
+        });
+        
+        // Update form metadata
+        form.dataset.mode = 'edit';
+        form.dataset.partnerId = partnerId;
+        
+        // Update modal title and show
+        const modalTitle = document.getElementById('modal-title');
+        if (modalTitle) {
+            modalTitle.textContent = 'Edit Partner';
+        }
+        
+        const modal = document.getElementById('partner-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+        
+        // Set up form submission handler
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            try {
+                // Validate required fields
+                const requiredFields = ['name', 'location', 'bio'];
+                const formData = new FormData(form);
+                const missingFields = requiredFields.filter(field => !formData.get(field));
+                
+                if (missingFields.length > 0) {
+                    throw new Error(`Required fields missing: ${missingFields.join(', ')}`);
+                }
+                
+                // Prepare partner data
+                const partnerData = {
+                    name: formData.get('name'),
+                    location: formData.get('location'),
+                    image: formData.get('image'),
+                    bio: formData.get('bio'),
+                    website: formData.get('website'),
+                    contact: {
+                        email: formData.get('contact.email'),
+                        phone: formData.get('contact.phone')
+                    },
+                    partnershipDetails: formData.get('partnershipDetails')
+                };
+                
+                // Send update request
+                const response = await fetch(`/api/partners/${partnerId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(partnerData)
+                });
+                
+                // Handle response
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || errorData.details || 'Failed to update partner');
+                }
+                
+                // Process successful update
+                const updatedPartner = await response.json();
+                console.log('Partner updated successfully:', updatedPartner);
+                
+                showToast('Partner updated successfully', 'success');
+                closeModal();
+                
+                // Reload partners list and update stats
+                await loadPartners();
+                
+            } catch (error) {
+                console.error('Error updating partner:', error);
+                showToast(error.message || 'Error updating partner', 'error');
+            }
+        };
+    } catch (error) {
+        console.error('Error loading partner details:', error);
+        showToast('Error loading partner details', 'error');
+    }
+}
+
+// Delete partner
+async function deletePartner(partnerId) {
+    // Show delete confirmation modal
+    const deleteModal = document.getElementById('delete-modal');
+    deleteModal.style.display = 'flex';
+    
+    // Set up confirm delete handler
+    window.confirmDelete = async () => {
+        try {
+            const response = await fetch(`/api/partners/${partnerId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                showToast('Partner deleted successfully', 'success');
+                closeDeleteModal();
+                loadPartners();
+            } else {
+                showToast('Error deleting partner', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting partner:', error);
+            showToast('Error deleting partner', 'error');
+        }
+    };
 }
 
 // Initialize everything when the page loads

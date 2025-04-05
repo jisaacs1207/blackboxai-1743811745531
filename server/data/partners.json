@@ -1,15 +1,80 @@
 [
   {
-    "id": "1743882458506",
-    "name": "test",
-    "location": "test",
-    "image": "",
-    "bio": "ttt",
-    "website": "https://google.com",
+    "id": "1",
+    "name": "International School of Beijing",
+    "location": "Beijing, China",
+    "image": "https://images.unsplash.com/photo-1606761568499-6d2451b23c66?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    "bio": "The International School of Beijing is a leading educational institution committed to providing world-class education to students from diverse backgrounds. With over 30 years of excellence in education, ISB prepares students for success in a global context.",
+    "website": "https://www.isb.edu",
     "contact": {
-      "email": "test@google.com",
-      "phone": "tt"
+      "email": "partnerships@isb.edu",
+      "phone": "+86 10 8149 2345"
     },
-    "partnershipDetails": "ttt"
+    "partnershipDetails": "Joint curriculum development and student exchange programs focusing on STEM and cultural immersion experiences."
+  },
+  {
+    "id": "2",
+    "name": "Colegio San Patricio",
+    "location": "Madrid, Spain",
+    "image": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    "bio": "Colegio San Patricio is a prestigious Spanish educational institution known for its bilingual program and commitment to academic excellence. The school combines Spanish educational traditions with international best practices.",
+    "website": "https://www.sanpatricio.es",
+    "contact": {
+      "email": "info@sanpatricio.es",
+      "phone": "+34 91 563 7844"
+    },
+    "partnershipDetails": "Dual diploma program with emphasis on language immersion and cultural exchange opportunities."
+  },
+  {
+    "id": "3",
+    "name": "Tokyo International Academy",
+    "location": "Tokyo, Japan",
+    "image": "https://images.unsplash.com/photo-1565071559227-20ab25b7685e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    "bio": "Tokyo International Academy is at the forefront of innovative education in Japan. The academy combines Japanese educational excellence with global perspectives to prepare students for international success.",
+    "website": "https://www.tia.edu.jp",
+    "contact": {
+      "email": "partnerships@tia.edu.jp",
+      "phone": "+81 3 5467 8901"
+    },
+    "partnershipDetails": "Collaborative research projects and technology-focused educational initiatives."
+  },
+  {
+    "id": "4",
+    "name": "British School of Milan",
+    "location": "Milan, Italy",
+    "image": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    "bio": "The British School of Milan offers a unique blend of British and Italian educational excellence. With a focus on arts and humanities, the school provides students with a rich cultural learning experience.",
+    "website": "https://www.britishschoolmilan.com",
+    "contact": {
+      "email": "admissions@britishschoolmilan.com",
+      "phone": "+39 02 210 8451"
+    },
+    "partnershipDetails": "Arts and cultural exchange programs, featuring joint exhibitions and performances."
+  },
+  {
+    "id": "5",
+    "name": "Sydney Grammar School",
+    "location": "Sydney, Australia",
+    "image": "https://images.unsplash.com/photo-1564981797816-1043664bf78d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    "bio": "Sydney Grammar School is renowned for its academic rigor and comprehensive approach to education. The school emphasizes both traditional academic excellence and modern innovative practices.",
+    "website": "https://www.sgs.edu.au",
+    "contact": {
+      "email": "international@sgs.edu.au",
+      "phone": "+61 2 9332 5800"
+    },
+    "partnershipDetails": "Environmental science initiatives and sustainability-focused educational programs."
+  },
+  {
+    "id": "6",
+    "name": "American School of Dubai",
+    "location": "Dubai, UAE",
+    "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    "bio": "The American School of Dubai is a leading international school that combines American educational standards with global perspectives. The school is known for its innovative approach to technology and learning.",
+    "website": "https://www.asdubai.org",
+    "contact": {
+      "email": "partnerships@asdubai.org",
+      "phone": "+971 4 395 0005"
+    },
+    "partnershipDetails": "Innovation and entrepreneurship focused programs with emphasis on technology integration."
   }
 ]
