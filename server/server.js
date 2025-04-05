@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs').promises;
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 const app = express();
 
 // Store customization data
@@ -35,10 +36,20 @@ app.use((req, res, next) => {
 
 // Session middleware
 app.use(session({
+    store: new FileStore({
+        path: path.join(__dirname, 'sessions'),
+        ttl: 86400, // 24 hours
+        reapInterval: 3600 // Clean up expired sessions every hour
+    }),
     secret: 'wasatch-academy-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false } // set to true in production with HTTPS
+    resave: true,
+    saveUninitialized: true,
+    rolling: true, // Resets the cookie expiration on every response
+    cookie: { 
+        secure: false, // set to true in production with HTTPS
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        httpOnly: true
+    }
 }));
 
 // Authentication middleware
