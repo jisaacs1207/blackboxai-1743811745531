@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Wasatch Academy Partners</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body class="font-[Montserrat] bg-gray-50">
+    <!-- Login Form -->
+    <div id="login-section" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <div class="text-center mb-8">
+                <img src="https://www.wasatchacademy.org/wp-content/uploads/2020/08/wasatch-academy-logo.png" 
+                     alt="Wasatch Academy Logo" 
+                     class="h-16 mx-auto mb-4">
+                <h2 class="text-2xl font-bold text-[#003057]">Admin Login</h2>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="username" name="username" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#003057] focus:border-[#003057]">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" name="password" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#003057] focus:border-[#003057]">
+                </div>
+                <button type="submit" 
+                        class="w-full bg-[#003057] text-white py-2 px-4 rounded-md hover:bg-[#002340] transition">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard-section" class="hidden min-h-screen bg-gray-50">
+        <!-- Header -->
+        <header class="bg-[#003057] text-white">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <img src="https://www.wasatchacademy.org/wp-content/uploads/2020/08/wasatch-academy-logo-white.png" 
+                         alt="Wasatch Academy Logo" 
+                         class="h-10">
+                    <h1 class="text-xl font-semibold">Admin Dashboard</h1>
+                </div>
+                <button id="logout-btn" class="text-white hover:text-[#F4B223] transition">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 py-8">
+            <!-- Actions Bar -->
+            <div class="mb-8 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-[#003057]">Partner Management</h2>
+                <button id="add-partner-btn" 
+                        class="bg-[#F4B223] text-white py-2 px-4 rounded-md hover:bg-[#d99b1a] transition">
+                    <i class="fas fa-plus mr-2"></i>Add New Partner
+                </button>
+            </div>
+
+            <!-- Partners List -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div id="partners-table" class="min-w-full">
+                    <!-- Table will be dynamically populated -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Add/Edit Partner Modal -->
+        <div id="partner-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <h3 id="modal-title" class="text-2xl font-bold text-[#003057]">Add New Partner</h3>
+                        <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="partner-form" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Partner Name</label>
+                            <input type="text" name="name" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Location</label>
+                            <input type="text" name="location" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Image URL</label>
+                            <input type="url" name="image"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Bio</label>
+                            <textarea name="bio" rows="3"
+                                      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Website</label>
+                            <input type="url" name="website"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Contact Email</label>
+                            <input type="email" name="contact.email"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Contact Phone</label>
+                            <input type="tel" name="contact.phone"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Partnership Details</label>
+                            <textarea name="partnershipDetails" rows="3"
+                                      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                        </div>
+                        <div class="flex justify-end space-x-4">
+                            <button type="button" onclick="closeModal()"
+                                    class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 bg-[#003057] text-white rounded-md hover:bg-[#002340]">
+                                Save Partner
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-xl font-bold text-[#003057] mb-4">Confirm Deletion</h3>
+                <p class="text-gray-600 mb-6">Are you sure you want to delete this partner? This action cannot be undone.</p>
+                <div class="flex justify-end space-x-4">
+                    <button onclick="closeDeleteModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button onclick="confirmDelete()"
+                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
