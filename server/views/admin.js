@@ -1,300 +1,256 @@
-// DOM Elements
-const loginSection = document.getElementById('login-section');
-const dashboardSection = document.getElementById('dashboard-section');
-const loginForm = document.getElementById('login-form');
-const logoutBtn = document.getElementById('logout-btn');
-const addPartnerBtn = document.getElementById('add-partner-btn');
-const partnerModal = document.getElementById('partner-modal');
-const deleteModal = document.getElementById('delete-modal');
-const partnerForm = document.getElementById('partner-form');
-const partnersTable = document.getElementById('partners-table');
+// Login functionality
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuthStatus();
+    setupLoginForm();
+    setupLogoutButton();
+});
 
-let currentPartnerId = null;
-let partners = [];
+function checkAuthStatus() {
+    fetch('/api/auth/status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.isAuthenticated) {
+                showDashboard();
+                loadCustomization();
+            } else {
+                showLoginForm();
+            }
+        })
+        .catch(error => console.error('Error checking auth status:', error));
+}
 
-// Authentication Functions
-async function login(credentials) {
-    try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(credentials),
-            credentials: 'include'
+function setupLoginForm() {
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showDashboard();
+                    loadCustomization();
+                } else {
+                    showToast('Invalid credentials', 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast('Login failed', 'error');
+            }
         });
-
-        if (!response.ok) {
-            throw new Error('Invalid credentials');
-        }
-
-        showDashboard();
-        loadPartners();
-        showToast('Logged in successfully', 'success');
-    } catch (error) {
-        showToast(error.message, 'error');
     }
 }
 
-async function logout() {
-    try {
-        await fetch('/api/logout', {
-            method: 'POST',
-            credentials: 'include'
+function setupLogoutButton() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                showLoginForm();
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
         });
-        showLogin();
-        showToast('Logged out successfully', 'success');
-    } catch (error) {
-        showToast('Error logging out', 'error');
     }
 }
 
-// UI Functions
-function showLogin() {
-    loginSection.classList.remove('hidden');
-    dashboardSection.classList.add('hidden');
+function showLoginForm() {
+    document.getElementById('login-section').classList.remove('hidden');
+    document.getElementById('dashboard-section').classList.add('hidden');
 }
 
 function showDashboard() {
-    loginSection.classList.add('hidden');
-    dashboardSection.classList.remove('hidden');
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('dashboard-section').classList.remove('hidden');
 }
 
+// Site customization functionality
+let siteCustomization = {
+    bannerUrl: '',
+    backgroundColor: '#FFFFFF',
+    headerColor: '#194A53',
+    fontColor: '#333333',
+    accentColor: '#F76B1C'
+};
+
+// Initialize color pickers and input fields
+async function loadCustomization() {
+    try {
+        const response = await fetch('/api/customization');
+        const data = await response.json();
+        siteCustomization = { ...siteCustomization, ...data };
+        updateColorInputs();
+        updateBannerPreview();
+    } catch (error) {
+        console.error('Error loading customization:', error);
+    }
+}
+
+function setupColorPicker(colorId, hexId, rgbId, customizationKey) {
+    const colorPicker = document.getElementById(colorId);
+    const hexInput = document.getElementById(hexId);
+    const rgbInput = document.getElementById(rgbId);
+
+    if (!colorPicker || !hexInput || !rgbInput) return;
+
+    // Set initial values
+    colorPicker.value = siteCustomization[customizationKey];
+    hexInput.value = siteCustomization[customizationKey];
+    rgbInput.value = hexToRgb(siteCustomization[customizationKey]);
+
+    // Color picker change
+    colorPicker.addEventListener('input', (e) => {
+        const color = e.target.value;
+        siteCustomization[customizationKey] = color;
+        hexInput.value = color;
+        rgbInput.value = hexToRgb(color);
+        showPreview();
+    });
+
+    // Hex input change
+    hexInput.addEventListener('input', (e) => {
+        let color = e.target.value;
+        if (isValidHex(color)) {
+            siteCustomization[customizationKey] = color;
+            colorPicker.value = color;
+            rgbInput.value = hexToRgb(color);
+            showPreview();
+        }
+    });
+
+    // RGB input change
+    rgbInput.addEventListener('input', (e) => {
+        const rgb = e.target.value;
+        if (isValidRgb(rgb)) {
+            const hex = rgbToHex(rgb);
+            siteCustomization[customizationKey] = hex;
+            colorPicker.value = hex;
+            hexInput.value = hex;
+            showPreview();
+        }
+    });
+}
+
+function updateColorInputs() {
+    setupColorPicker('bg-color', 'bg-color-hex', 'bg-color-rgb', 'backgroundColor');
+    setupColorPicker('header-color', 'header-color-hex', 'header-color-rgb', 'headerColor');
+    setupColorPicker('font-color', 'font-color-hex', 'font-color-rgb', 'fontColor');
+    setupColorPicker('accent-color', 'accent-color-hex', 'accent-color-rgb', 'accentColor');
+}
+
+function updateBannerPreview() {
+    const bannerImg = document.getElementById('current-banner');
+    const bannerInput = document.getElementById('banner-url');
+    
+    if (bannerImg && bannerInput && siteCustomization.bannerUrl) {
+        bannerImg.src = siteCustomization.bannerUrl;
+        bannerInput.value = siteCustomization.bannerUrl;
+    }
+}
+
+function updateBanner() {
+    const bannerUrl = document.getElementById('banner-url').value;
+    siteCustomization.bannerUrl = bannerUrl;
+    updateBannerPreview();
+    showPreview();
+}
+
+function showPreview() {
+    // Create a preview of changes before applying
+    const previewStyles = document.createElement('style');
+    previewStyles.id = 'preview-styles';
+    previewStyles.textContent = `
+        :root {
+            --bg-color: ${siteCustomization.backgroundColor};
+            --header-color: ${siteCustomization.headerColor};
+            --font-color: ${siteCustomization.fontColor};
+            --accent-color: ${siteCustomization.accentColor};
+        }
+    `;
+
+    // Remove existing preview if any
+    const existingPreview = document.getElementById('preview-styles');
+    if (existingPreview) {
+        existingPreview.remove();
+    }
+
+    document.head.appendChild(previewStyles);
+}
+
+async function applyCustomization() {
+    try {
+        const response = await fetch('/api/customization', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(siteCustomization)
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            showToast('Customization applied successfully!', 'success');
+        } else {
+            showToast('Error applying customization', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving customization:', error);
+        showToast('Error applying customization', 'error');
+    }
+}
+
+// Color conversion utilities
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+        ? `rgb(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)})`
+        : '';
+}
+
+function rgbToHex(rgb) {
+    const values = rgb.match(/\d+/g);
+    if (!values || values.length !== 3) return '';
+    
+    const [r, g, b] = values.map(x => {
+        const hex = parseInt(x).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    });
+    
+    return `#${r}${g}${b}`;
+}
+
+function isValidHex(color) {
+    return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color);
+}
+
+function isValidRgb(color) {
+    return /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/.test(color);
+}
+
+// Toast notification
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    toast.innerHTML = `
-        <div class="flex items-center">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>
-            <span>${message}</span>
-        </div>
-    `;
+    toast.textContent = message;
     document.body.appendChild(toast);
-    
-    // Trigger reflow to enable animation
-    toast.offsetHeight;
-    toast.classList.add('show');
-    
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
-
-// Partner Management Functions
-async function loadPartners() {
-    try {
-        const response = await fetch('/api/partners', {
-            credentials: 'include'
-        });
-        partners = await response.json();
-        renderPartnersTable();
-    } catch (error) {
-        showToast('Error loading partners', 'error');
-    }
-}
-
-function renderPartnersTable() {
-    partnersTable.innerHTML = `
-        <table class="partners-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Location</th>
-                    <th>Website</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${partners.map(partner => `
-                    <tr>
-                        <td class="font-medium">${partner.name}</td>
-                        <td>${partner.location || '-'}</td>
-                        <td>
-                            ${partner.website ? 
-                                `<a href="${partner.website}" target="_blank" class="text-blue-600 hover:text-blue-800">
-                                    ${new URL(partner.website).hostname}
-                                </a>` : 
-                                '-'
-                            }
-                        </td>
-                        <td>
-                            <div class="flex space-x-2">
-                                <button onclick="editPartner(${partner.id})" 
-                                        class="text-blue-600 hover:text-blue-800">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button onclick="showDeleteConfirmation(${partner.id})" 
-                                        class="text-red-600 hover:text-red-800">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-}
-
-function showPartnerModal(isEdit = false) {
-    const modalTitle = document.getElementById('modal-title');
-    modalTitle.textContent = isEdit ? 'Edit Partner' : 'Add New Partner';
-    partnerModal.classList.remove('hidden');
-    partnerModal.classList.add('flex');
-}
-
-function closeModal() {
-    partnerModal.classList.remove('flex');
-    partnerModal.classList.add('hidden');
-    partnerForm.reset();
-    currentPartnerId = null;
-}
-
-function showDeleteConfirmation(partnerId) {
-    currentPartnerId = partnerId;
-    deleteModal.classList.remove('hidden');
-    deleteModal.classList.add('flex');
-}
-
-function closeDeleteModal() {
-    deleteModal.classList.remove('flex');
-    deleteModal.classList.add('hidden');
-    currentPartnerId = null;
-}
-
-async function editPartner(partnerId) {
-    currentPartnerId = partnerId;
-    const partner = partners.find(p => p.id === partnerId);
-    if (partner) {
-        Object.entries(partner).forEach(([key, value]) => {
-            if (typeof value === 'object') {
-                Object.entries(value).forEach(([subKey, subValue]) => {
-                    const input = partnerForm.querySelector(`[name="${key}.${subKey}"]`);
-                    if (input) input.value = subValue || '';
-                });
-            } else {
-                const input = partnerForm.querySelector(`[name="${key}"]`);
-                if (input) input.value = value || '';
-            }
-        });
-        showPartnerModal(true);
-    }
-}
-
-async function savePartner(formData) {
-    const partnerData = {
-        name: formData.get('name'),
-        location: formData.get('location'),
-        image: formData.get('image'),
-        bio: formData.get('bio'),
-        website: formData.get('website'),
-        contact: {
-            email: formData.get('contact.email'),
-            phone: formData.get('contact.phone')
-        },
-        partnershipDetails: formData.get('partnershipDetails')
-    };
-
-    try {
-        const url = currentPartnerId ? 
-            `/api/partners/${currentPartnerId}` : 
-            '/api/partners';
-        
-        const response = await fetch(url, {
-            method: currentPartnerId ? 'PUT' : 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(partnerData),
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error('Error saving partner');
-        }
-
-        closeModal();
-        loadPartners();
-        showToast(`Partner ${currentPartnerId ? 'updated' : 'added'} successfully`, 'success');
-    } catch (error) {
-        showToast(error.message, 'error');
-    }
-}
-
-async function confirmDelete() {
-    if (!currentPartnerId) return;
-
-    try {
-        const response = await fetch(`/api/partners/${currentPartnerId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error('Error deleting partner');
-        }
-
-        closeDeleteModal();
-        loadPartners();
-        showToast('Partner deleted successfully', 'success');
-    } catch (error) {
-        showToast(error.message, 'error');
-    }
-}
-
-// Event Listeners
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(loginForm);
-    await login({
-        username: formData.get('username'),
-        password: formData.get('password')
-    });
-});
-
-logoutBtn.addEventListener('click', logout);
-
-addPartnerBtn.addEventListener('click', () => {
-    partnerForm.reset();
-    showPartnerModal(false);
-});
-
-partnerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(partnerForm);
-    await savePartner(formData);
-});
-
-// Close modals when clicking outside
-partnerModal.addEventListener('click', (e) => {
-    if (e.target === partnerModal) closeModal();
-});
-
-deleteModal.addEventListener('click', (e) => {
-    if (e.target === deleteModal) closeDeleteModal();
-});
-
-// Close modals on escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeModal();
-        closeDeleteModal();
-    }
-});
-
-// Initialize empty partners.json if it doesn't exist
-fetch('/api/partners', { credentials: 'include' })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        }
-        throw new Error('Not authenticated');
-    })
-    .then(() => {
-        showDashboard();
-        loadPartners();
-    })
-    .catch(() => {
-        showLogin();
-    });
