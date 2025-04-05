@@ -1,74 +1,79 @@
-require('dotenv').config();
 const express = require('express');
-const session = require('express-session');
-const cors = require('cors');
-const morgan = require('morgan');
 const path = require('path');
 const fs = require('fs').promises;
-
+const session = require('express-session');
 const app = express();
-const PORT = process.env.PORT || 8000;
 
-// Middleware
-app.use(morgan('dev')); // Logging
-app.use(cors({
-    origin: 'http://localhost:8000',
-    credentials: true
-}));
+// Store customization data
+let siteCustomization = {
+    bannerUrl: 'https://images.squarespace-cdn.com/content/v1/6421f90cd6a614318dc936f1/5ca0415e-66be-4002-b6f9-b88651166ff9/WA-Shield%2BWordmark-Horizontal.png?format=1500w',
+    backgroundColor: '#FFFFFF',
+    headerColor: '#194A53',
+    fontColor: '#333333',
+    accentColor: '#F76B1C'
+};
+
+// Admin credentials (in production, use environment variables and proper hashing)
+const ADMIN_CREDENTIALS = {
+    username: 'admin',
+    password: 'wasatch2024'
+};
+
 app.use(express.json());
-// Serve client static files
-app.use(express.static(path.join(__dirname, '../client')));
+app.use(express.static('client'));
+app.use(express.static(path.join(__dirname, 'views')));
 
-// Serve admin static files
-app.use('/admin.js', express.static(path.join(__dirname, 'views/admin.js')));
-app.use('/admin.css', express.static(path.join(__dirname, 'views/admin.css')));
+// Session middleware
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'wasatch-academy-secret',
+    secret: 'wasatch-academy-secret',
     resave: false,
     saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
+    cookie: { secure: false } // set to true in production with HTTPS
 }));
 
 // Authentication middleware
-const authMiddleware = (req, res, next) => {
-    if (req.session && req.session.isAuthenticated) {
+const requireAuth = (req, res, next) => {
+    if (req.session.isAuthenticated) {
         next();
     } else {
         res.status(401).json({ error: 'Unauthorized' });
     }
 };
 
-// Data file path
-const PARTNERS_FILE = path.join(__dirname, 'data', 'partners.json');
-
-// Ensure data directory and file exist
-async function ensureDataFile() {
+// Load customization from file if exists
+async function loadCustomization() {
     try {
-        await fs.mkdir(path.join(__dirname, 'data'), { recursive: true });
-        try {
-            await fs.access(PARTNERS_FILE);
-        } catch {
-            await fs.writeFile(PARTNERS_FILE, '[]');
-        }
+        const data = await fs.readFile(path.join(__dirname, 'data', 'customization.json'), 'utf8');
+        siteCustomization = JSON.parse(data);
     } catch (error) {
-        console.error('Error initializing data file:', error);
+        console.log('No existing customization found, using defaults');
     }
 }
 
-// Initialize data file
-ensureDataFile();
+// Save customization to file
+async function saveCustomization() {
+    try {
+        await fs.writeFile(
+            path.join(__dirname, 'data', 'customization.json'),
+            JSON.stringify(siteCustomization, null, 2)
+        );
+    } catch (error) {
+        console.error('Error saving customization:', error);
+    }
+}
 
-// Authentication Routes
+// Initialize customization
+loadCustomization();
+
+// Serve index.html at root
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'client', 'index.html'));
+});
+
+// Auth routes
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    
-    // For demo purposes, using hardcoded credentials
-    // In production, use environment variables and proper password hashing
-    if (username === 'admin' && password === 'wasatch2024') {
+    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
         req.session.isAuthenticated = true;
         res.json({ success: true });
     } else {
@@ -81,103 +86,88 @@ app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// Partner Routes
-// Get all partners
+// Customization API Routes
+app.get('/api/customization', (req, res) => {
+    res.json(siteCustomization);
+});
+
+app.post('/api/customization', requireAuth, async (req, res) => {
+    try {
+        siteCustomization = { ...siteCustomization, ...req.body };
+        await saveCustomization();
+        res.json({ success: true, message: 'Customization saved successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error saving customization' });
+    }
+});
+
+// Partner API Routes
 app.get('/api/partners', async (req, res) => {
     try {
-        const data = await fs.readFile(PARTNERS_FILE, 'utf8');
+        const data = await fs.readFile(path.join(__dirname, 'data', 'partners.json'), 'utf8');
         const partners = JSON.parse(data);
         res.json(partners);
     } catch (error) {
-        console.error('Error reading partners:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error reading partners data' });
     }
 });
 
-// Get single partner
-app.get('/api/partners/:id', async (req, res) => {
+app.post('/api/partners', requireAuth, async (req, res) => {
     try {
-        const data = await fs.readFile(PARTNERS_FILE, 'utf8');
+        const data = await fs.readFile(path.join(__dirname, 'data', 'partners.json'), 'utf8');
         const partners = JSON.parse(data);
-        const partner = partners.find(p => p.id === parseInt(req.params.id));
-        
-        if (partner) {
-            res.json(partner);
-        } else {
-            res.status(404).json({ error: 'Partner not found' });
-        }
-    } catch (error) {
-        console.error('Error reading partner:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Create new partner (protected)
-app.post('/api/partners', authMiddleware, async (req, res) => {
-    try {
-        const data = await fs.readFile(PARTNERS_FILE, 'utf8');
-        const partners = JSON.parse(data);
-        
         const newPartner = {
-            id: partners.length > 0 ? Math.max(...partners.map(p => p.id)) + 1 : 1,
-            ...req.body,
-            createdAt: new Date().toISOString()
+            id: Date.now().toString(),
+            ...req.body
         };
-        
         partners.push(newPartner);
-        await fs.writeFile(PARTNERS_FILE, JSON.stringify(partners, null, 2));
-        
-        res.status(201).json(newPartner);
+        await fs.writeFile(
+            path.join(__dirname, 'data', 'partners.json'),
+            JSON.stringify(partners, null, 2)
+        );
+        res.json(newPartner);
     } catch (error) {
-        console.error('Error creating partner:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error saving partner data' });
     }
 });
 
-// Update partner (protected)
-app.put('/api/partners/:id', authMiddleware, async (req, res) => {
+app.put('/api/partners/:id', requireAuth, async (req, res) => {
     try {
-        const data = await fs.readFile(PARTNERS_FILE, 'utf8');
+        const data = await fs.readFile(path.join(__dirname, 'data', 'partners.json'), 'utf8');
         let partners = JSON.parse(data);
-        const index = partners.findIndex(p => p.id === parseInt(req.params.id));
-        
-        if (index !== -1) {
-            partners[index] = {
-                ...partners[index],
-                ...req.body,
-                id: partners[index].id,
-                updatedAt: new Date().toISOString()
-            };
-            
-            await fs.writeFile(PARTNERS_FILE, JSON.stringify(partners, null, 2));
-            res.json(partners[index]);
-        } else {
-            res.status(404).json({ error: 'Partner not found' });
+        const index = partners.findIndex(p => p.id === req.params.id);
+        if (index === -1) {
+            return res.status(404).json({ error: 'Partner not found' });
         }
+        partners[index] = { ...partners[index], ...req.body };
+        await fs.writeFile(
+            path.join(__dirname, 'data', 'partners.json'),
+            JSON.stringify(partners, null, 2)
+        );
+        res.json(partners[index]);
     } catch (error) {
-        console.error('Error updating partner:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error updating partner data' });
     }
 });
 
-// Delete partner (protected)
-app.delete('/api/partners/:id', authMiddleware, async (req, res) => {
+app.delete('/api/partners/:id', requireAuth, async (req, res) => {
     try {
-        const data = await fs.readFile(PARTNERS_FILE, 'utf8');
+        const data = await fs.readFile(path.join(__dirname, 'data', 'partners.json'), 'utf8');
         let partners = JSON.parse(data);
-        const index = partners.findIndex(p => p.id === parseInt(req.params.id));
-        
-        if (index !== -1) {
-            partners.splice(index, 1);
-            await fs.writeFile(PARTNERS_FILE, JSON.stringify(partners, null, 2));
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ error: 'Partner not found' });
-        }
+        partners = partners.filter(p => p.id !== req.params.id);
+        await fs.writeFile(
+            path.join(__dirname, 'data', 'partners.json'),
+            JSON.stringify(partners, null, 2)
+        );
+        res.json({ success: true });
     } catch (error) {
-        console.error('Error deleting partner:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error deleting partner' });
     }
+});
+
+// Check auth status
+app.get('/api/auth/status', (req, res) => {
+    res.json({ isAuthenticated: !!req.session.isAuthenticated });
 });
 
 // Serve admin page
@@ -185,18 +175,8 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'admin.html'));
 });
 
-// Serve the main page for all other routes
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/index.html'));
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Something broke!' });
-});
-
 // Start server
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
