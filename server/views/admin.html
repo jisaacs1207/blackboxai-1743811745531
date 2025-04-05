@@ -73,88 +73,6 @@
 
         <!-- Main Content -->
         <main class="container mx-auto px-4 py-8">
-            <!-- Site Customization -->
-            <div class="mb-12">
-                <h2 class="text-3xl font-bold text-gray-800 mb-8">Site Customization</h2>
-                <div
-                    class="bg-white rounded-2xl shadow-lg p-8 mb-8 transform hover:scale-[1.01] transition-transform duration-300">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Banner Image -->
-                        <div>
-                            <label class="block text-sm font-medium text-[#333333] mb-2">Banner Image</label>
-                            <div class="flex items-center space-x-4">
-                                <img id="current-banner" src="" alt="Current banner" class="h-16 object-cover rounded">
-                                <input type="url" id="banner-url" placeholder="Enter image URL"
-                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md">
-                                <button onclick="updateBanner()"
-                                    class="bg-[#194A53] text-white px-4 py-2 rounded-md hover:bg-[#F76B1C] transition">
-                                    Update
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Color Pickers -->
-                        <div class="space-y-4">
-                            <!-- Background Color -->
-                            <div>
-                                <label class="block text-sm font-medium text-[#333333] mb-2">Background Color</label>
-                                <div class="flex items-center space-x-4">
-                                    <input type="color" id="bg-color" class="h-10 w-20">
-                                    <input type="text" id="bg-color-hex" placeholder="#FFFFFF"
-                                        class="w-28 px-3 py-2 border border-gray-300 rounded-md">
-                                    <input type="text" id="bg-color-rgb" placeholder="rgb(255, 255, 255)"
-                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md">
-                                </div>
-                            </div>
-
-                            <!-- Header Color -->
-                            <div>
-                                <label class="block text-sm font-medium text-[#333333] mb-2">Header Color</label>
-                                <div class="flex items-center space-x-4">
-                                    <input type="color" id="header-color" class="h-10 w-20">
-                                    <input type="text" id="header-color-hex" placeholder="#194A53"
-                                        class="w-28 px-3 py-2 border border-gray-300 rounded-md">
-                                    <input type="text" id="header-color-rgb" placeholder="rgb(25, 74, 83)"
-                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md">
-                                </div>
-                            </div>
-
-                            <!-- Font Color -->
-                            <div>
-                                <label class="block text-sm font-medium text-[#333333] mb-2">Font Color</label>
-                                <div class="flex items-center space-x-4">
-                                    <input type="color" id="font-color" class="h-10 w-20">
-                                    <input type="text" id="font-color-hex" placeholder="#333333"
-                                        class="w-28 px-3 py-2 border border-gray-300 rounded-md">
-                                    <input type="text" id="font-color-rgb" placeholder="rgb(51, 51, 51)"
-                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md">
-                                </div>
-                            </div>
-
-                            <!-- Accent Color -->
-                            <div>
-                                <label class="block text-sm font-medium text-[#333333] mb-2">Accent Color</label>
-                                <div class="flex items-center space-x-4">
-                                    <input type="color" id="accent-color" class="h-10 w-20">
-                                    <input type="text" id="accent-color-hex" placeholder="#F76B1C"
-                                        class="w-28 px-3 py-2 border border-gray-300 rounded-md">
-                                    <input type="text" id="accent-color-rgb" placeholder="rgb(247, 107, 28)"
-                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Apply Changes Button -->
-                    <div class="mt-6 flex justify-end">
-                        <button onclick="applyCustomization()"
-                            class="bg-[#F76B1C] text-white px-6 py-2 rounded-md hover:bg-[#194A53] transition">
-                            Apply Changes
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             <!-- Partner Management -->
             <div class="mb-12">
                 <div class="flex justify-between items-center mb-8">
@@ -164,21 +82,6 @@
                         <i class="fas fa-plus"></i>
                         <span>Add New Partner</span>
                     </button>
-                </div>
-                <!-- Stats Row -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="stat-card">
-                        <div class="stat-value">24</div>
-                        <div class="stat-label">Total Partners</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">18</div>
-                        <div class="stat-label">Active Partners</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">6</div>
-                        <div class="stat-label">Countries</div>
-                    </div>
                 </div>
             </div>
 
@@ -215,6 +118,8 @@
                             <label class="block text-sm font-medium text-[#333333]">Image URL</label>
                             <input type="url" name="image"
                                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <p class="mt-1 text-sm text-gray-500">Recommended size: 800x600 pixels, 16:9 aspect ratio
+                            </p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-[#333333]">Bio</label>

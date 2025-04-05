@@ -1,27 +1,58 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs').promises;
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
+const helmet = require('helmet');
+const compression = require('compression');
+const cors = require('cors');
 const app = express();
 
-// Store customization data
-let siteCustomization = {
-    bannerUrl: 'https://images.squarespace-cdn.com/content/v1/6421f90cd6a614318dc936f1/5ca0415e-66be-4002-b6f9-b88651166ff9/WA-Shield%2BWordmark-Horizontal.png?format=1500w',
-    backgroundColor: '#FFFFFF',
-    headerColor: '#194A53',
-    fontColor: '#333333',
-    accentColor: '#F76B1C'
+// Security middleware
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", 'cdn.tailwindcss.com', 'cdnjs.cloudflare.com'],
+            styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdn.tailwindcss.com', 'cdnjs.cloudflare.com'],
+            imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+            fontSrc: ["'self'", 'fonts.gstatic.com'],
+            connectSrc: ["'self'"]
+        }
+    }
+}));
+
+// Compression middleware
+app.use(compression());
+
+// CORS configuration
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+};
+app.use(cors(corsOptions));
+
+// Admin credentials from environment variables
+const ADMIN_CREDENTIALS = {
+    username: process.env.ADMIN_USERNAME || 'admin',
+    password: process.env.ADMIN_PASSWORD || 'wasatch2024'
 };
 
-// Admin credentials (in production, use environment variables and proper hashing)
-const ADMIN_CREDENTIALS = {
-    username: 'admin',
-    password: 'wasatch2024'
-};
+// Basic security headers
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+});
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '..', 'client')));
+app.use(express.static(path.join(__dirname, '..', 'client'), {
+    maxAge: '1d',
+    etag: true
+}));
 app.use('/admin', express.static(path.join(__dirname, 'views')));
 
 // Set proper MIME types
@@ -34,23 +65,43 @@ app.use((req, res, next) => {
     next();
 });
 
-// Session middleware
-app.use(session({
+// Session configuration
+const sessionConfig = {
     store: new FileStore({
         path: path.join(__dirname, 'sessions'),
         ttl: 86400, // 24 hours
-        reapInterval: 3600 // Clean up expired sessions every hour
+        reapInterval: 3600, // Clean up expired sessions every hour
+        retries: 0
     }),
-    secret: 'wasatch-academy-secret',
-    resave: true,
-    saveUninitialized: true,
-    rolling: true, // Resets the cookie expiration on every response
+    secret: process.env.SESSION_SECRET || 'wasatch-academy-secret',
+    resave: false,
+    saveUninitialized: false,
+    rolling: true,
+    name: 'sessionId', // Change default connect.sid
     cookie: { 
-        secure: false, // set to true in production with HTTPS
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        httpOnly: true
+        sameSite: 'strict'
     }
-}));
+};
+
+// Use secure cookies in production
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+    sessionConfig.cookie.secure = true;
+}
+
+app.use(session(sessionConfig));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ 
+        error: 'Internal Server Error',
+        message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    });
+});
 
 // Authentication middleware
 const requireAuth = (req, res, next) => {
@@ -61,63 +112,72 @@ const requireAuth = (req, res, next) => {
     }
 };
 
-// Load customization from file if exists
-async function loadCustomization() {
+// Rate limiting for login attempts
+let loginAttempts = new Map();
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+
+// Partner data management
+const PARTNERS_FILE = path.join(__dirname, 'data', 'partners.json');
+const PARTNERS_BACKUP = path.join(__dirname, 'data', 'partners.backup.json');
+
+async function readPartners() {
     try {
-        const data = await fs.readFile(path.join(__dirname, 'data', 'customization.json'), 'utf8');
-        siteCustomization = JSON.parse(data);
+        const data = await fs.readFile(PARTNERS_FILE, 'utf8');
+        return JSON.parse(data);
     } catch (error) {
-        console.log('No existing customization found, using defaults');
+        if (error.code === 'ENOENT') {
+            return [];
+        }
+        throw error;
     }
 }
 
-// Save customization to file
-async function saveCustomization() {
+async function writePartners(partners) {
+    // Create backup first
     try {
-        await fs.writeFile(
-            path.join(__dirname, 'data', 'customization.json'),
-            JSON.stringify(siteCustomization, null, 2)
-        );
+        const currentData = await fs.readFile(PARTNERS_FILE, 'utf8');
+        await fs.writeFile(PARTNERS_BACKUP, currentData);
     } catch (error) {
-        console.error('Error saving customization:', error);
+        console.error('Error creating backup:', error);
     }
+
+    // Write new data
+    await fs.writeFile(PARTNERS_FILE, JSON.stringify(partners, null, 2));
 }
 
-// Initialize data and start server
-async function initializeServer() {
-    try {
-        // Load customization
-        const customData = await fs.readFile(path.join(__dirname, 'data', 'customization.json'), 'utf8');
-        siteCustomization = JSON.parse(customData);
-        console.log('Loaded customization:', siteCustomization);
-    } catch (error) {
-        console.log('Using default customization');
-    }
-}
-
-// Initialize data and start server
-initializeServer().then(() => {
-    const PORT = process.env.PORT || 8000;
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
-    });
-}).catch(error => {
-    console.error('Failed to initialize server:', error);
-    process.exit(1);
-});
-
-// Serve index.html at root
+// Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'client', 'index.html'));
 });
 
-// Auth routes
-app.post('/api/login', (req, res) => {
+// Auth routes with rate limiting
+app.post('/api/login', async (req, res) => {
+    const ip = req.ip;
+    const now = Date.now();
+    const attempts = loginAttempts.get(ip) || { count: 0, timestamp: now };
+
+    // Check if IP is locked out
+    if (attempts.count >= MAX_LOGIN_ATTEMPTS && now - attempts.timestamp < LOCKOUT_TIME) {
+        return res.status(429).json({ 
+            error: 'Too many login attempts. Please try again later.' 
+        });
+    }
+
+    // Reset attempts if lockout period has passed
+    if (now - attempts.timestamp >= LOCKOUT_TIME) {
+        attempts.count = 0;
+    }
+
     const { username, password } = req.body;
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
         req.session.isAuthenticated = true;
+        loginAttempts.delete(ip); // Reset attempts on successful login
         res.json({ success: true });
     } else {
+        attempts.count++;
+        attempts.timestamp = now;
+        loginAttempts.set(ip, attempts);
         res.status(401).json({ error: 'Invalid credentials' });
     }
 });
@@ -127,72 +187,20 @@ app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// Customization API Routes
-app.get('/api/customization', (req, res) => {
-    res.json(siteCustomization);
-});
-
-app.post('/api/customization', requireAuth, async (req, res) => {
-    try {
-        // Update customization
-        siteCustomization = { ...siteCustomization, ...req.body };
-        
-        // Save to file
-        await fs.writeFile(
-            path.join(__dirname, 'data', 'customization.json'),
-            JSON.stringify(siteCustomization, null, 2)
-        );
-
-        // Send updated customization back
-        res.json({ 
-            success: true, 
-            message: 'Customization saved successfully',
-            customization: siteCustomization
-        });
-    } catch (error) {
-        console.error('Error saving customization:', error);
-        res.status(500).json({ success: false, message: 'Error saving customization' });
-    }
-});
-
 // Partner API Routes
-// Enable CORS
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
-});
-
 app.get('/api/partners', async (req, res) => {
     try {
-        console.log('Attempting to read partners.json...');
-        const filePath = path.join(__dirname, 'data', 'partners.json');
-        console.log('File path:', filePath);
-        
-        const data = await fs.readFile(filePath, 'utf8');
-        console.log('File read successfully');
-        
-        const partners = JSON.parse(data);
-        console.log(`Found ${partners.length} partners`);
-        
+        const partners = await readPartners();
         res.json(partners);
     } catch (error) {
-        console.error('Error in /api/partners:', error);
-        if (error.code === 'ENOENT') {
-            res.status(404).json({ error: 'Partners data file not found' });
-        } else if (error instanceof SyntaxError) {
-            res.status(500).json({ error: 'Invalid partners data format' });
-        } else {
-            res.status(500).json({ error: 'Error reading partners data' });
-        }
+        console.error('Error reading partners:', error);
+        res.status(500).json({ error: 'Error reading partners data' });
     }
 });
 
-// Get single partner by ID
 app.get('/api/partners/:id', async (req, res) => {
     try {
-        const data = await fs.readFile(path.join(__dirname, 'data', 'partners.json'), 'utf8');
-        const partners = JSON.parse(data);
+        const partners = await readPartners();
         const partner = partners.find(p => p.id === req.params.id);
         if (!partner) {
             return res.status(404).json({ error: 'Partner not found' });
@@ -206,127 +214,53 @@ app.get('/api/partners/:id', async (req, res) => {
 
 app.post('/api/partners', requireAuth, async (req, res) => {
     try {
-        const data = await fs.readFile(path.join(__dirname, 'data', 'partners.json'), 'utf8');
-        const partners = JSON.parse(data);
+        const partners = await readPartners();
         const newPartner = {
             id: Date.now().toString(),
-            ...req.body
+            ...req.body,
+            createdAt: new Date().toISOString()
         };
         partners.push(newPartner);
-        await fs.writeFile(
-            path.join(__dirname, 'data', 'partners.json'),
-            JSON.stringify(partners, null, 2)
-        );
+        await writePartners(partners);
         res.json(newPartner);
     } catch (error) {
+        console.error('Error creating partner:', error);
         res.status(500).json({ error: 'Error saving partner data' });
     }
 });
 
-// Update partner
 app.put('/api/partners/:id', requireAuth, async (req, res) => {
-    const partnersPath = path.join(__dirname, 'data', 'partners.json');
-    const backupPath = path.join(__dirname, 'data', 'partners.backup.json');
-    
     try {
-        // Read and parse current partners
-        const data = await fs.readFile(partnersPath, 'utf8');
-        let partners;
-        
-        try {
-            partners = JSON.parse(data);
-        } catch (parseError) {
-            console.error('Error parsing partners.json:', parseError);
-            return res.status(500).json({ error: 'Invalid partners data structure' });
-        }
-        
-        // Validate partners array
-        if (!Array.isArray(partners)) {
-            console.error('Partners data is not an array');
-            return res.status(500).json({ error: 'Invalid partners data structure' });
-        }
-        
-        // Create backup before modification
-        await fs.writeFile(backupPath, JSON.stringify(partners, null, 2));
-        
-        // Find partner to update
+        const partners = await readPartners();
         const index = partners.findIndex(p => p.id === req.params.id);
         if (index === -1) {
             return res.status(404).json({ error: 'Partner not found' });
         }
-        
-        // Validate required fields in request body
-        const requiredFields = ['name', 'location', 'bio'];
-        const missingFields = requiredFields.filter(field => !req.body[field]);
-        if (missingFields.length > 0) {
-            return res.status(400).json({ 
-                error: `Missing required fields: ${missingFields.join(', ')}` 
-            });
-        }
-        
-        // Create updated partner object
+
         const updatedPartner = {
-            id: req.params.id,         // Ensure ID remains unchanged
-            name: req.body.name,
-            location: req.body.location,
-            image: req.body.image || partners[index].image,
-            bio: req.body.bio,
-            website: req.body.website || partners[index].website,
-            contact: {
-                email: req.body.contact?.email || partners[index].contact?.email,
-                phone: req.body.contact?.phone || partners[index].contact?.phone
-            },
-            partnershipDetails: req.body.partnershipDetails || partners[index].partnershipDetails
+            ...partners[index],
+            ...req.body,
+            id: req.params.id,
+            updatedAt: new Date().toISOString()
         };
-        
-        // Update partner in array
+
         partners[index] = updatedPartner;
-        
-        // Validate final partners array
-        if (partners.length !== 6) {
-            // Restore from backup if validation fails
-            await fs.copyFile(backupPath, partnersPath);
-            return res.status(500).json({ error: 'Partner update would result in invalid data' });
-        }
-        
-        // Write back to file
-        try {
-            await fs.writeFile(partnersPath, JSON.stringify(partners, null, 2));
-            // Remove backup after successful write
-            await fs.unlink(backupPath).catch(() => {}); // Ignore error if backup doesn't exist
-        } catch (writeError) {
-            console.error('Error writing partners file:', writeError);
-            // Restore from backup
-            await fs.copyFile(backupPath, partnersPath);
-            throw new Error('Failed to save partner data');
-        }
-        
-        // Log success
-        console.log(`Successfully updated partner ${req.params.id}`);
-        console.log('Total partners:', partners.length);
-        
-        // Send response
+        await writePartners(partners);
         res.json(updatedPartner);
     } catch (error) {
         console.error('Error updating partner:', error);
-        res.status(500).json({ 
-            error: 'Error updating partner data',
-            details: error.message 
-        });
+        res.status(500).json({ error: 'Error updating partner data' });
     }
 });
 
 app.delete('/api/partners/:id', requireAuth, async (req, res) => {
     try {
-        const data = await fs.readFile(path.join(__dirname, 'data', 'partners.json'), 'utf8');
-        let partners = JSON.parse(data);
-        partners = partners.filter(p => p.id !== req.params.id);
-        await fs.writeFile(
-            path.join(__dirname, 'data', 'partners.json'),
-            JSON.stringify(partners, null, 2)
-        );
+        const partners = await readPartners();
+        const filteredPartners = partners.filter(p => p.id !== req.params.id);
+        await writePartners(filteredPartners);
         res.json({ success: true });
     } catch (error) {
+        console.error('Error deleting partner:', error);
         res.status(500).json({ error: 'Error deleting partner' });
     }
 });
@@ -341,3 +275,18 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'admin.html'));
 });
 
+// Cleanup old sessions periodically
+setInterval(() => {
+    const now = Date.now();
+    loginAttempts.forEach((attempts, ip) => {
+        if (now - attempts.timestamp >= LOCKOUT_TIME) {
+            loginAttempts.delete(ip);
+        }
+    });
+}, LOCKOUT_TIME);
+
+// Start server
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+});

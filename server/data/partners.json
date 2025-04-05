@@ -63,18 +63,5 @@
       "phone": "+61 2 9332 5800"
     },
     "partnershipDetails": "Environmental science initiatives and sustainability-focused educational programs."
-  },
-  {
-    "id": "6",
-    "name": "American School of Dubai",
-    "location": "Dubai, UAE",
-    "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    "bio": "The American School of Dubai is a leading international school that combines American educational standards with global perspectives. The school is known for its innovative approach to technology and learning.",
-    "website": "https://www.asdubai.org",
-    "contact": {
-      "email": "partnerships@asdubai.org",
-      "phone": "+971 4 395 0005"
-    },
-    "partnershipDetails": "Innovation and entrepreneurship focused programs with emphasis on technology integration."
   }
 ]
