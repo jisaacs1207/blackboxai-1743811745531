@@ -1,2 +1,2 @@
-# blackboxai-1743811745531
-Built by https://www.blackbox.ai
+# wasatch.academy
+Built to display partners of Wasatach Academy 
