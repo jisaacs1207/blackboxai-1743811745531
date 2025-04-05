@@ -3,8 +3,8 @@
 /* Form focus states */
 input:focus, textarea:focus {
     outline: none;
-    border-color: #003057;
-    box-shadow: 0 0 0 2px rgba(0, 48, 87, 0.2);
+    border-color: #F76B1C;
+    box-shadow: 0 0 0 2px rgba(247, 107, 28, 0.2);
 }
 
 /* Custom scrollbar */
@@ -13,16 +13,16 @@ input:focus, textarea:focus {
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #003057;
+    background: #194A53;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #002340;
+    background: #F76B1C;
 }
 
 /* Table styles */
@@ -33,17 +33,18 @@ input:focus, textarea:focus {
 }
 
 .partners-table th {
-    background-color: #f8fafc;
+    background-color: #ffffff;
     padding: 1rem;
     text-align: left;
     font-weight: 600;
-    color: #003057;
+    color: #333333;
     border-bottom: 2px solid #e2e8f0;
 }
 
 .partners-table td {
     padding: 1rem;
     border-bottom: 1px solid #e2e8f0;
+    color: #333333;
 }
 
 .partners-table tr:hover {
@@ -75,9 +76,9 @@ input:focus, textarea:focus {
 
 /* Loading spinner */
 .loading-spinner {
-    border: 3px solid rgba(0, 48, 87, 0.1);
+    border: 3px solid rgba(25, 74, 83, 0.1);
     border-radius: 50%;
-    border-top: 3px solid #003057;
+    border-top: 3px solid #F76B1C;
     width: 24px;
     height: 24px;
     animation: spin 1s linear infinite;
@@ -109,7 +110,7 @@ input:focus, textarea:focus {
 }
 
 .toast-success {
-    border-left: 4px solid #10B981;
+    border-left: 4px solid #F76B1C;
 }
 
 .toast-error {
@@ -120,24 +121,12 @@ input:focus, textarea:focus {
 .btn-primary {
     position: relative;
     overflow: hidden;
+    background-color: #194A53;
+    color: white;
 }
 
-.btn-primary::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: width 0.3s ease-out, height 0.3s ease-out;
-}
-
-.btn-primary:hover::after {
-    width: 200%;
-    height: 200%;
+.btn-primary:hover {
+    background-color: #F76B1C;
 }
 
 /* Form validation styles */
@@ -163,6 +152,7 @@ input:invalid, textarea:invalid {
 /* Card hover effect */
 .partner-card {
     transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    background-color: white;
 }
 
 .partner-card:hover {
@@ -172,7 +162,7 @@ input:invalid, textarea:invalid {
 
 /* Status indicators */
 .status-active {
-    background-color: #10B981;
+    background-color: #F76B1C;
     color: white;
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
@@ -180,7 +170,7 @@ input:invalid, textarea:invalid {
 }
 
 .status-inactive {
-    background-color: #6B7280;
+    background-color: #333333;
     color: white;
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
