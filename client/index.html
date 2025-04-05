@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wasatch Academy Dual Diploma Program Partners</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-[Montserrat] bg-gray-50">
+    <!-- Header -->
+    <header class="bg-[#003057] text-white">
+        <nav class="container mx-auto px-4 py-6 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <img src="https://www.wasatchacademy.org/wp-content/uploads/2020/08/wasatch-academy-logo-white.png" alt="Wasatch Academy Logo" class="h-12">
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#about" class="hover:text-[#F4B223] transition">About</a>
+                <a href="#program" class="hover:text-[#F4B223] transition">Dual Diploma Program</a>
+                <a href="#partners" class="hover:text-[#F4B223] transition">Partners</a>
+            </div>
+        </nav>
+        
+        <div class="container mx-auto px-4 py-16 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6">Global Partnerships</h1>
+            <p class="text-xl md:text-2xl max-w-3xl mx-auto">Connecting Educational Excellence Worldwide through the Wasatch Academy Dual Diploma Program</p>
+        </div>
+    </header>
+
+    <!-- About Section -->
+    <section id="about" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-[#003057]">Global Initiatives Department</h2>
+            <div class="max-w-4xl mx-auto">
+                <p class="text-lg mb-6 text-gray-700 leading-relaxed">
+                    The Global Initiatives Department at Wasatch Academy is dedicated to fostering international educational partnerships and creating opportunities for students worldwide. Through our innovative programs and collaborations, we bring together diverse perspectives and create pathways for academic excellence.
+                </p>
+                <p class="text-lg text-gray-700 leading-relaxed">
+                    Our mission is to provide transformative educational experiences that prepare students for success in an increasingly interconnected world. We believe in the power of global education to bridge cultures and create lasting positive impact.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dual Diploma Program Section -->
+    <section id="program" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-[#003057]">Dual Diploma Program</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <p class="text-lg mb-6 text-gray-700 leading-relaxed">
+                        The Wasatch Academy Dual Diploma Program offers international students the unique opportunity to earn both their local diploma and a US high school diploma simultaneously. This innovative program combines:
+                    </p>
+                    <ul class="list-none space-y-4 mb-6">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-[#F4B223] mt-1 mr-3"></i>
+                            <span class="text-gray-700">Accredited US curriculum aligned with international standards</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-[#F4B223] mt-1 mr-3"></i>
+                            <span class="text-gray-700">Flexible online learning platform with personalized support</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-[#F4B223] mt-1 mr-3"></i>
+                            <span class="text-gray-700">Direct pathway to US higher education opportunities</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-[#F4B223] mt-1 mr-3"></i>
+                            <span class="text-gray-700">Cultural exchange and global networking opportunities</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Partners Section -->
+    <section id="partners" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-[#003057]">Our Partners</h2>
+            <div id="partners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Partner cards will be dynamically inserted here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Partner Modal -->
+    <div id="partner-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-6">
+                    <h3 id="modal-title" class="text-2xl font-bold text-[#003057]"></h3>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="modal-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-[#003057] text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2024 Wasatch Academy Global Initiatives. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
