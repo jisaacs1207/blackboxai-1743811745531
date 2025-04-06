@@ -75,8 +75,8 @@ function showDashboard() {
     document.getElementById('dashboard-section').classList.remove('hidden');
 }
 
-// Site customization functionality
-let siteCustomization = {
+// Default customization values
+const defaultCustomization = {
     bannerUrl: '',
     backgroundColor: '#FFFFFF',
     headerColor: '#194A53',
@@ -84,16 +84,31 @@ let siteCustomization = {
     accentColor: '#F76B1C'
 };
 
+// Site customization state initialized with defaults
+let siteCustomization = { ...defaultCustomization };
+
 // Initialize color pickers and input fields
 async function loadCustomization() {
     try {
         const response = await fetch('/api/customization');
         const data = await response.json();
-        siteCustomization = { ...siteCustomization, ...data };
+        
+        // Merge with defaults to ensure all properties exist
+        siteCustomization = { ...defaultCustomization, ...data };
+        
         updateColorInputs();
         updateBannerPreview();
     } catch (error) {
         console.error('Error loading customization:', error);
+        
+        // Use defaults if loading fails
+        siteCustomization = { ...defaultCustomization };
+        updateColorInputs();
+        
+        // Only show error toast if it's not a first-time load
+        if (error.message !== 'Failed to fetch') {
+            showToast('Error loading customization settings. Using defaults.', 'error');
+        }
     }
 }
 
@@ -312,7 +327,8 @@ function setupPartnerManagement() {
         addPartnerBtn.addEventListener('click', () => {
             const modal = document.getElementById('partner-modal');
             if (modal) {
-                modal.style.display = 'flex';
+                modal.classList.add('flex');
+                modal.classList.remove('hidden');
             }
         });
     }
@@ -321,7 +337,8 @@ function setupPartnerManagement() {
 function closeModal() {
     const modal = document.getElementById('partner-modal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
         const form = document.getElementById('partner-form');
         if (form) form.reset();
     }
@@ -330,7 +347,8 @@ function closeModal() {
 function closeDeleteModal() {
     const modal = document.getElementById('delete-modal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
     }
 }
 
@@ -339,32 +357,33 @@ async function loadPartners() {
     try {
         const response = await fetch('/api/partners');
         const partners = await response.json();
+        
+        // Update table
         const partnersTable = document.getElementById('partners-table');
         if (partnersTable) {
-            // Create table headers
             partnersTable.innerHTML = `
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="partners-table w-full">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>Contact</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody>
                         ${partners.map(partner => `
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">${partner.name || ''}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">${partner.location || ''}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">${partner.contact?.email || ''}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <button onclick="editPartner('${partner.id}')" 
-                                            class="text-[#194A53] hover:text-[#F76B1C] transition-colors mr-4">
+                                <td>${partner.name || ''}</td>
+                                <td>${partner.location || ''}</td>
+                                <td>${partner.contact?.email || ''}</td>
+                                <td class="text-right">
+                                    <button data-action="edit" data-id="${partner.id}" 
+                                            class="btn btn-secondary mr-2">
                                         <i class="fas fa-edit"></i> Edit
                                     </button>
-                                    <button onclick="deletePartner('${partner.id}')" 
-                                            class="text-red-600 hover:text-red-800 transition-colors">
+                                    <button data-action="delete" data-id="${partner.id}" 
+                                            class="btn btn-secondary text-red-600">
                                         <i class="fas fa-trash-alt"></i> Delete
                                     </button>
                                 </td>
@@ -373,16 +392,28 @@ async function loadPartners() {
                     </tbody>
                 </table>
             `;
+
+            // Add event listeners to table buttons
+            partnersTable.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+
+                const action = button.dataset.action;
+                const id = button.dataset.id;
+
+                if (action === 'edit') editPartner(id);
+                if (action === 'delete') deletePartner(id);
+            });
         }
 
         // Update stats
         const totalPartners = partners.length;
         const activePartners = partners.filter(p => p.active !== false).length;
-        const countries = [...new Set(partners.map(p => p.location.split(',').pop().trim()))].length;
+        const countries = [...new Set(partners.map(p => p.location?.split(',').pop()?.trim() || ''))].length;
 
-        document.querySelector('.stat-value:nth-child(1)').textContent = totalPartners;
-        document.querySelector('.stat-value:nth-child(2)').textContent = activePartners;
-        document.querySelector('.stat-value:nth-child(3)').textContent = countries;
+        document.getElementById('total-partners').textContent = totalPartners;
+        document.getElementById('active-partners').textContent = activePartners;
+        document.getElementById('total-countries').textContent = countries;
 
     } catch (error) {
         console.error('Error loading partners:', error);
@@ -393,23 +424,30 @@ async function loadPartners() {
 // Edit partner
 async function editPartner(partnerId) {
     try {
-        // Get partner data
         const response = await fetch(`/api/partners/${partnerId}`);
         if (!response.ok) {
             throw new Error('Failed to fetch partner data');
         }
         
         const partner = await response.json();
-        console.log('Editing partner:', partner);
         
-        // Get form and validate
+        // Get form and modal elements
         const form = document.getElementById('partner-form');
-        if (!form) {
-            throw new Error('Partner form not found');
+        const modal = document.getElementById('partner-modal');
+        const modalTitle = document.getElementById('modal-title');
+        
+        if (!form || !modal || !modalTitle) {
+            throw new Error('Required elements not found');
         }
         
+        // Update modal title
+        modalTitle.textContent = 'Edit Partner';
+        
+        // Reset form and populate with partner data
+        form.reset();
+        
         // Populate form fields
-        const fields = {
+        Object.entries({
             'name': partner.name || '',
             'location': partner.location || '',
             'image': partner.image || '',
@@ -418,87 +456,52 @@ async function editPartner(partnerId) {
             'contact.email': partner.contact?.email || '',
             'contact.phone': partner.contact?.phone || '',
             'partnershipDetails': partner.partnershipDetails || ''
-        };
-        
-        // Set each field value
-        Object.entries(fields).forEach(([name, value]) => {
+        }).forEach(([name, value]) => {
             const field = form.querySelector(`[name="${name}"]`);
-            if (field) {
-                field.value = value;
-            }
+            if (field) field.value = value;
         });
         
-        // Update form metadata
-        form.dataset.mode = 'edit';
+        // Store partner ID for submission
         form.dataset.partnerId = partnerId;
         
-        // Update modal title and show
-        const modalTitle = document.getElementById('modal-title');
-        if (modalTitle) {
-            modalTitle.textContent = 'Edit Partner';
-        }
+        // Show modal
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
         
-        const modal = document.getElementById('partner-modal');
-        if (modal) {
-            modal.style.display = 'flex';
-        }
-        
-        // Set up form submission handler
+        // Update form submit handler
         form.onsubmit = async (e) => {
             e.preventDefault();
+            const formData = new FormData(form);
+            const partnerData = {
+                name: formData.get('name'),
+                location: formData.get('location'),
+                image: formData.get('image'),
+                bio: formData.get('bio'),
+                website: formData.get('website'),
+                contact: {
+                    email: formData.get('contact.email'),
+                    phone: formData.get('contact.phone')
+                },
+                partnershipDetails: formData.get('partnershipDetails')
+            };
             
             try {
-                // Validate required fields
-                const requiredFields = ['name', 'location', 'bio'];
-                const formData = new FormData(form);
-                const missingFields = requiredFields.filter(field => !formData.get(field));
-                
-                if (missingFields.length > 0) {
-                    throw new Error(`Required fields missing: ${missingFields.join(', ')}`);
-                }
-                
-                // Prepare partner data
-                const partnerData = {
-                    name: formData.get('name'),
-                    location: formData.get('location'),
-                    image: formData.get('image'),
-                    bio: formData.get('bio'),
-                    website: formData.get('website'),
-                    contact: {
-                        email: formData.get('contact.email'),
-                        phone: formData.get('contact.phone')
-                    },
-                    partnershipDetails: formData.get('partnershipDetails')
-                };
-                
-                // Send update request
-                const response = await fetch(`/api/partners/${partnerId}`, {
+                const updateResponse = await fetch(`/api/partners/${partnerId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(partnerData)
                 });
                 
-                // Handle response
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || errorData.details || 'Failed to update partner');
+                if (!updateResponse.ok) {
+                    throw new Error('Failed to update partner');
                 }
-                
-                // Process successful update
-                const updatedPartner = await response.json();
-                console.log('Partner updated successfully:', updatedPartner);
                 
                 showToast('Partner updated successfully', 'success');
                 closeModal();
-                
-                // Reload partners list and update stats
-                await loadPartners();
-                
+                loadPartners();
             } catch (error) {
                 console.error('Error updating partner:', error);
-                showToast(error.message || 'Error updating partner', 'error');
+                showToast('Error updating partner', 'error');
             }
         };
     } catch (error) {
@@ -511,7 +514,8 @@ async function editPartner(partnerId) {
 async function deletePartner(partnerId) {
     // Show delete confirmation modal
     const deleteModal = document.getElementById('delete-modal');
-    deleteModal.style.display = 'flex';
+    deleteModal.classList.remove('hidden');
+    deleteModal.classList.add('flex');
     
     // Set up confirm delete handler
     window.confirmDelete = async () => {
@@ -540,6 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupLoginForm();
     setupLogoutButton();
     setupPartnerManagement();
+    setupModalHandlers();
 
     // Setup observer for dashboard visibility
     const observer = new MutationObserver((mutations) => {
@@ -559,3 +564,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Setup modal event handlers
+function setupModalHandlers() {
+    // Close modal buttons
+    document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
+    document.getElementById('cancel-modal-btn')?.addEventListener('click', closeModal);
+    document.getElementById('cancel-delete-btn')?.addEventListener('click', closeDeleteModal);
+    
+    // Confirm delete button
+    document.getElementById('confirm-delete-btn')?.addEventListener('click', () => {
+        if (window.confirmDelete) window.confirmDelete();
+    });
+}

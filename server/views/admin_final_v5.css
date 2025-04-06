@@ -1,0 +1,220 @@
+:root {
+    --primary: #F76B1C;
+    /* Orange - Primary brand color */
+    --text: #333333;
+    /* Dark gray - Text */
+    --accent: #194A53;
+    /* Blue - Accent */
+    --white: #FFFFFF;
+    --black: #000000;
+    --gray-100: #F7F7F7;
+    --gray-200: #E5E5E5;
+    --scrollbar: #D1D5DB;
+    /* Light grey for scrollbar */
+}
+
+/* Base styles */
+body {
+    font-family: 'Montserrat', sans-serif;
+    line-height: 1.5;
+    background-color: var(--gray-50);
+}
+
+/* Login form styles */
+#login-section {
+    background: linear-gradient(to bottom right, var(--primary), var(--gray-850));
+}
+
+.login-container {
+    background: var(--white);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+    padding: 2rem;
+    width: 100%;
+    max-width: 24rem;
+    margin: 0 1rem;
+}
+
+/* Dashboard header */
+header {
+    background-color: var(--primary);
+    box-shadow: var(--shadow-md);
+}
+
+/* Button styles */
+.btn-primary {
+    background-color: var(--accent);
+    color: var(--white);
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(25, 74, 83, 0.2);
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(247, 107, 28, 0.3);
+}
+
+/* Modal styles */
+.modal {
+    backdrop-filter: blur(8px);
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    display: flex;
+    /* Ensure modal is displayed as flex */
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 32rem;
+    margin: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Table styles */
+.partners-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 1rem;
+}
+
+.partners-table th {
+    background-color: var(--gray-50);
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text);
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.partners-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--text);
+}
+
+.partners-table tr:hover td {
+    background-color: var(--gray-50);
+}
+
+/* Stat card styles */
+.stat-card {
+    background: var(--white);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--gray-400);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Toast notifications */
+.toast {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    background: var(--white);
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transform: translateY(-1rem);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast-success {
+    border-left: 4px solid var(--accent);
+}
+
+.toast-error {
+    border-left: 4px solid #EF4444;
+}
+
+/* Input styles */
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.5rem;
+    margin-top: 0.25rem;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(247, 107, 28, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero {
+        min-height: 60vh;
+    }
+
+    .partner-card {
+        margin: 0 auto;
+        max-width: 400px;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--scrollbar);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-200);
+}

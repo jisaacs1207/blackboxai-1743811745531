@@ -5,14 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wasatch Academy Dual Diploma Program Partners</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'montserrat': ['Montserrat', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#F76B1C',
+                        accent: '#194A53',
+                    },
+                },
+            },
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="font-[Montserrat] bg-white">
+<body class="font-montserrat bg-white text-base">
     <!-- Header -->
     <header class="relative text-white min-h-[80vh] hero">
         <div class="nav-container">
@@ -38,9 +53,9 @@
         </div>
 
         <div
-            class="container mx-auto px-6 hero-content flex flex-col justify-center items-center min-h-[60vh] text-center pt-24 pb-16">
-            <h1 class="text-4xl md:text-6xl font-bold mb-6 animate-fade-in hero-text">Global Partnerships</h1>
-            <p class="text-lg md:text-xl max-w-3xl mx-auto mb-8 opacity-95 animate-fade-in hero-text"
+            class="container mx-auto px-6 hero-content flex flex-col justify-center items-center min-h-[50vh] text-center pt-20 pb-12">
+            <h1 class="text-3xl md:text-5xl font-bold mb-4 animate-fade-in hero-text">Global Partnerships</h1>
+            <p class="text-base md:text-lg max-w-2xl mx-auto mb-6 opacity-95 animate-fade-in hero-text"
                 style="animation-delay: 0.2s">
                 Connecting Educational Excellence Worldwide through the Wasatch Academy Dual Diploma Program
             </p>
@@ -54,11 +69,11 @@
     </header>
 
     <!-- About Section -->
-    <section id="about" class="py-24 bg-white">
+    <section id="about" class="py-16 bg-white">
         <div class="container mx-auto px-6">
-            <h2 class="text-4xl md:text-5xl font-bold text-center section-title">Global Initiatives Department</h2>
-            <div class="max-w-4xl mx-auto mt-16">
-                <p class="text-xl mb-8 text-[#333333] leading-relaxed animate-fade-in">
+            <h2 class="text-2xl md:text-4xl font-bold text-center section-title">Global Initiatives Department</h2>
+            <div class="max-w-3xl mx-auto mt-12">
+                <p class="text-base md:text-lg mb-6 text-[#333333] leading-relaxed animate-fade-in">
                     The Global Initiatives Department at Wasatch Academy is dedicated to fostering international
                     educational partnerships and creating opportunities for students worldwide. Through our innovative
                     programs and collaborations, we bring together diverse perspectives and create pathways for academic
@@ -74,36 +89,36 @@
     </section>
 
     <!-- Dual Diploma Program Section -->
-    <section id="program" class="py-24 bg-gray-50">
+    <section id="program" class="py-16 bg-gray-50">
         <div class="container mx-auto px-6">
-            <h2 class="text-4xl md:text-5xl font-bold text-center section-title">Dual Diploma Program</h2>
-            <div class="max-w-5xl mx-auto mt-16">
+            <h2 class="text-2xl md:text-4xl font-bold text-center section-title">Dual Diploma Program</h2>
+            <div class="max-w-4xl mx-auto mt-12">
                 <div
                     class="bg-white rounded-2xl shadow-lg p-10 transform hover:scale-[1.02] transition-transform duration-300">
-                    <p class="text-xl mb-8 text-[#333333] leading-relaxed">
+                    <p class="text-base md:text-lg mb-6 text-[#333333] leading-relaxed">
                         The Wasatch Academy Dual Diploma Program offers international students the unique opportunity to
                         earn both their local diploma and a US high school diploma simultaneously. This innovative
                         program combines:
                     </p>
-                    <ul class="list-none space-y-6 mb-8">
+                    <ul class="list-none space-y-4 mb-6">
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-[#F76B1C] mt-1 mr-4 text-xl"></i>
-                            <span class="text-[#333333] text-lg">Accredited US curriculum aligned with international
+                            <i class="fas fa-check-circle text-[#F76B1C] mt-1 mr-3 text-lg"></i>
+                            <span class="text-[#333333] text-base">Accredited US curriculum aligned with international
                                 standards</span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-[#F76B1C] mt-1 mr-4 text-xl"></i>
-                            <span class="text-[#333333] text-lg">Flexible online learning platform with personalized
+                            <i class="fas fa-check-circle text-[#F76B1C] mt-1 mr-3 text-lg"></i>
+                            <span class="text-[#333333] text-base">Flexible online learning platform with personalized
                                 support</span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-[#F76B1C] mt-1 mr-4 text-xl"></i>
-                            <span class="text-[#333333] text-lg">Direct pathway to US higher education
+                            <i class="fas fa-check-circle text-[#F76B1C] mt-1 mr-3 text-lg"></i>
+                            <span class="text-[#333333] text-base">Direct pathway to US higher education
                                 opportunities</span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-check-circle text-[#F76B1C] mt-1 mr-4 text-xl"></i>
-                            <span class="text-[#333333] text-lg">Cultural exchange and global networking
+                            <i class="fas fa-check-circle text-[#F76B1C] mt-1 mr-3 text-lg"></i>
+                            <span class="text-[#333333] text-base">Cultural exchange and global networking
                                 opportunities</span>
                         </li>
                     </ul>
@@ -113,10 +128,10 @@
     </section>
 
     <!-- Partners Section -->
-    <section id="partners" class="py-24 bg-white">
+    <section id="partners" class="py-16 bg-white">
         <div class="container mx-auto px-6">
-            <h2 class="text-4xl md:text-5xl font-bold text-center section-title">Our Partners</h2>
-            <div id="partners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mt-16">
+            <h2 class="text-2xl md:text-4xl font-bold text-center section-title">Our Partners</h2>
+            <div id="partners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
                 <!-- Partner cards will be dynamically inserted here -->
             </div>
         </div>
@@ -138,27 +153,29 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-[#194A53] text-white py-16">
+    <footer class="bg-[#194A53] text-white py-12">
         <div class="container mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
                     <img src="https://images.squarespace-cdn.com/content/v1/6421f90cd6a614318dc936f1/5ca0415e-66be-4002-b6f9-b88651166ff9/WA-Shield%2BWordmark-Horizontal.png?format=1500w"
-                        alt="Wasatch Academy Logo" class="h-12 mb-6 footer-logo">
-                    <p class="text-gray-300">Empowering global education through innovative partnerships and academic
+                        alt="Wasatch Academy Logo" class="h-10 mb-4 footer-logo">
+                    <p class="text-gray-300 text-sm">Empowering global education through innovative partnerships and
+                        academic
                         excellence.</p>
                 </div>
                 <div>
-                    <h3 class="text-xl font-semibold mb-6">Quick Links</h3>
-                    <ul class="space-y-4">
-                        <li><a href="#about" class="text-gray-300 hover:text-white transition">About Us</a></li>
-                        <li><a href="#program" class="text-gray-300 hover:text-white transition">Dual Diploma
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#about" class="text-gray-300 hover:text-white transition text-sm">About Us</a></li>
+                        <li><a href="#program" class="text-gray-300 hover:text-white transition text-sm">Dual Diploma
                                 Program</a></li>
-                        <li><a href="#partners" class="text-gray-300 hover:text-white transition">Our Partners</a></li>
+                        <li><a href="#partners" class="text-gray-300 hover:text-white transition text-sm">Our
+                                Partners</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-xl font-semibold mb-6">Contact</h3>
-                    <ul class="space-y-4 text-gray-300">
+                    <h3 class="text-lg font-semibold mb-4">Contact</h3>
+                    <ul class="space-y-2 text-gray-300 text-sm">
                         <li class="flex items-center">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

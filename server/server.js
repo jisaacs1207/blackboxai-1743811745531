@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const fs = require('fs').promises;
+const fs = require('fs');
+const fsPromises = require('fs').promises;
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
 const helmet = require('helmet');
@@ -14,13 +15,54 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", 'cdn.tailwindcss.com', 'cdnjs.cloudflare.com'],
-            styleSrc: ["'self'", "'unsafe-inline'", 'fonts.googleapis.com', 'cdn.tailwindcss.com', 'cdnjs.cloudflare.com'],
-            imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-            fontSrc: ["'self'", 'fonts.gstatic.com'],
-            connectSrc: ["'self'"]
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                'cdn.tailwindcss.com',
+                'cdnjs.cloudflare.com',
+                'https://cdn.tailwindcss.com'
+            ],
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                'fonts.googleapis.com',
+                'cdn.tailwindcss.com',
+                'cdnjs.cloudflare.com'
+            ],
+            imgSrc: [
+                "'self'",
+                'data:',
+                'https:',
+                'blob:',
+                'images.squarespace-cdn.com',
+                'images.unsplash.com'
+            ],
+            fontSrc: [
+                "'self'",
+                'fonts.gstatic.com',
+                'cdnjs.cloudflare.com'
+            ],
+            connectSrc: [
+                "'self'",
+                'fonts.googleapis.com',
+                'fonts.gstatic.com',
+                'cdn.tailwindcss.com'
+            ],
+            scriptSrcElem: [
+                "'self'",
+                "'unsafe-inline'",
+                'cdn.tailwindcss.com',
+                'cdnjs.cloudflare.com'
+            ],
+            workerSrc: ["'self'", 'blob:'],
+            frameSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"]
         }
-    }
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false
 }));
 
 // Compression middleware
@@ -49,21 +91,31 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+
+// Serve static files with correct MIME types and caching
 app.use(express.static(path.join(__dirname, '..', 'client'), {
     maxAge: '1d',
-    etag: true
-}));
-app.use('/admin', express.static(path.join(__dirname, 'views')));
-
-// Set proper MIME types
-app.use((req, res, next) => {
-    if (req.url.endsWith('.css')) {
-        res.type('text/css');
-    } else if (req.url.endsWith('.js')) {
-        res.type('application/javascript');
+    etag: true,
+    setHeaders: (res, path) => {
+        if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        } else if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
     }
-    next();
-});
+}));
+
+// Serve admin static files
+// Serve admin static files with correct MIME types
+app.use('/admin', express.static(path.join(__dirname, 'views'), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        } else if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+    }
+}));
 
 // Session configuration
 const sessionConfig = {
@@ -94,15 +146,6 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use(session(sessionConfig));
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ 
-        error: 'Internal Server Error',
-        message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
-    });
-});
-
 // Authentication middleware
 const requireAuth = (req, res, next) => {
     if (req.session.isAuthenticated) {
@@ -123,10 +166,18 @@ const PARTNERS_BACKUP = path.join(__dirname, 'data', 'partners.backup.json');
 
 async function readPartners() {
     try {
-        const data = await fs.readFile(PARTNERS_FILE, 'utf8');
+        // Ensure data directory exists
+        const dataDir = path.dirname(PARTNERS_FILE);
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+
+        const data = await fsPromises.readFile(PARTNERS_FILE, 'utf8');
         return JSON.parse(data);
     } catch (error) {
         if (error.code === 'ENOENT') {
+            // If file doesn't exist, create it with empty array
+            await fsPromises.writeFile(PARTNERS_FILE, '[]');
             return [];
         }
         throw error;
@@ -134,16 +185,19 @@ async function readPartners() {
 }
 
 async function writePartners(partners) {
-    // Create backup first
     try {
-        const currentData = await fs.readFile(PARTNERS_FILE, 'utf8');
-        await fs.writeFile(PARTNERS_BACKUP, currentData);
-    } catch (error) {
-        console.error('Error creating backup:', error);
-    }
+        // Create backup first
+        if (fs.existsSync(PARTNERS_FILE)) {
+            const currentData = await fsPromises.readFile(PARTNERS_FILE, 'utf8');
+            await fsPromises.writeFile(PARTNERS_BACKUP, currentData);
+        }
 
-    // Write new data
-    await fs.writeFile(PARTNERS_FILE, JSON.stringify(partners, null, 2));
+        // Write new data
+        await fsPromises.writeFile(PARTNERS_FILE, JSON.stringify(partners, null, 2));
+    } catch (error) {
+        console.error('Error writing partners data:', error);
+        throw new Error('Failed to save partners data');
+    }
 }
 
 // Routes
@@ -185,6 +239,48 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/logout', (req, res) => {
     req.session.destroy();
     res.json({ success: true });
+});
+
+// Default customization
+const defaultCustomization = {
+    bannerUrl: '',
+    backgroundColor: '#FFFFFF',
+    headerColor: '#194A53',
+    fontColor: '#333333',
+    accentColor: '#F76B1C'
+};
+
+// Ensure data directory exists
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+}
+
+// Ensure customization file exists with defaults
+const customizationFile = path.join(dataDir, 'customization.json');
+if (!fs.existsSync(customizationFile)) {
+    fs.writeFileSync(customizationFile, JSON.stringify(defaultCustomization, null, 2));
+}
+
+// Customization API Routes
+app.get('/api/customization', (req, res) => {
+    try {
+        const data = fs.readFileSync(customizationFile, 'utf8');
+        res.json(JSON.parse(data));
+    } catch (error) {
+        console.error('Error reading customization:', error);
+        res.json(defaultCustomization);
+    }
+});
+
+app.post('/api/customization', requireAuth, (req, res) => {
+    try {
+        fs.writeFileSync(customizationFile, JSON.stringify(req.body, null, 2));
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving customization:', error);
+        res.status(500).json({ error: 'Error saving customization data' });
+    }
 });
 
 // Partner API Routes
@@ -270,9 +366,34 @@ app.get('/api/auth/status', (req, res) => {
     res.json({ isAuthenticated: !!req.session.isAuthenticated });
 });
 
-// Serve admin page
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'admin.html'));
+// Admin routes
+app.get('/admin', (req, res, next) => {
+    try {
+        // Check if sessions directory exists, create if not
+        const sessionsDir = path.join(__dirname, 'sessions');
+        if (!fs.existsSync(sessionsDir)) {
+            fs.mkdirSync(sessionsDir, { recursive: true });
+        }
+        
+        // Ensure data directory exists
+        const dataDir = path.join(__dirname, 'data');
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+        
+        res.sendFile(path.join(__dirname, 'views', 'admin.html'));
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Admin API status check
+app.get('/api/admin/status', (req, res) => {
+    res.json({ 
+        status: 'ok',
+        session: !!req.session.isAuthenticated,
+        env: process.env.NODE_ENV
+    });
 });
 
 // Cleanup old sessions periodically
@@ -285,8 +406,40 @@ setInterval(() => {
     });
 }, LOCKOUT_TIME);
 
-// Start server
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+// Error handling middleware - must be after routes but before server start
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    
+    // Handle session errors
+    if (err.name === 'SessionError') {
+        return res.redirect('/admin');
+    }
+    
+    // Handle file system errors
+    if (err.code === 'ENOENT') {
+        return res.status(404).json({ error: 'Resource not found' });
+    }
+    
+    // Log detailed error in development
+    if (process.env.NODE_ENV === 'development') {
+        console.error('Stack:', err.stack);
+    }
+    
+    res.status(500).json({
+        error: 'Internal Server Error',
+        message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    });
 });
+
+// Passenger compatibility
+if (typeof(PhusionPassenger) !== 'undefined') {
+    PhusionPassenger.configure({ autoInstall: false });
+    app.listen('passenger', () => {
+        console.log('Server running with Passenger');
+    });
+} else {
+    const PORT = process.env.PORT || 8000;
+    app.listen(PORT, () => {
+        console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    });
+}
